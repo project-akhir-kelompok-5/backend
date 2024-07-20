@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { BookModule } from './book/book.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
 import { AuthModule } from './app/auth/auth.module';
@@ -23,7 +22,6 @@ import { QueryBuilderModule } from './query-builder/query-builder.module';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot(typeOrmConfig),
-    BookModule,
     AuthModule,
     MailModule,
     QueryBuilderModule,

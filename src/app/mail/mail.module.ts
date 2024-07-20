@@ -11,8 +11,8 @@ import { join } from 'path';
         host: 'sandbox.smtp.mailtrap.io', //sesuaikan konfigurasi
         port: 2525,
         auth: {
-          user: 'aaba9c29b2048e', //sesuaikan user
-          pass: 'a7be188ee42f88', //sesuaikan password
+          user: '783886a23f42f0', //sesuaikan user
+          pass: '52b614fdbe29c2', //sesuaikan password
         },
       },
       defaults: {

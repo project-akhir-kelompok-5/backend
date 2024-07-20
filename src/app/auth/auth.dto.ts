@@ -74,6 +74,7 @@ export class LoginDto {
   @MinLength(6)
   password: string;
 
+  @IsOptional()
   @IsString()
   role: string;
 }
@@ -83,7 +84,7 @@ export class ResetPasswordDto {
   @MinLength(8)
   new_password: string;
 
-  // @IsString()
-  // @MinLength(8)
-  // confirm_password: string;
+  @IsString()
+  @MinLength(8)
+  confirm_password: string;
 }

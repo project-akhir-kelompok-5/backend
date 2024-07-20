@@ -52,12 +52,12 @@ export class AuthService extends BaseResponse {
       },
     });
 
-    // if (payload.confirm_password !== payload.new_password) {
-    //   throw new HttpException(
-    //     'password tidak valid',
-    //     HttpStatus.UNPROCESSABLE_ENTITY, // jika tidak sah , berikan pesan token tidak valid
-    //   );
-    // }
+    if (payload.confirm_password !== payload.new_password) {
+      throw new HttpException(
+        'password tidak sama',
+        HttpStatus.UNPROCESSABLE_ENTITY, // jika tidak sah , berikan pesan token tidak valid
+      );
+    }
 
     if (!userToken) {
       throw new HttpException(
@@ -122,7 +122,7 @@ export class AuthService extends BaseResponse {
       );
     }
     const token = randomBytes(32).toString('hex'); // membuat token
-    const link = `http://localhost:3011/auth/reset-password/${user.id}/${token}`; //membuat link untuk reset password
+    const link = `http://localhost:2009/auth/reset-password/${user.id}/${token}`; //membuat link untuk reset password
     await this.mailService.sendForgotPassword({
       email: email,
       name: user.nama,
@@ -234,6 +234,12 @@ export class AuthService extends BaseResponse {
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
+    // if (checkUserExists.role != payload.role) {
+    //   throw new HttpException(
+    //     'role tidak sesuai',
+    //     HttpStatus.UNPROCESSABLE_ENTITY,
+    //   );
+    // }
     const checkPassword = await compare(
       payload.password,
       checkUserExists.password,
