@@ -1,3 +1,4 @@
+import { HttpStatus } from '@nestjs/common';
 import { ResponsePagination, ResponseSuccess } from 'src/interface/respone';
 
 class BaseResponse {
@@ -25,6 +26,15 @@ class BaseResponse {
         page: page,
         pageSize: pageSize,
       },
+    };
+  }
+
+   _error(message: string, statusCode: HttpStatus): ResponseSuccess {
+    return {
+      status: 'error',
+      message: message,
+      data: null,
+      // statusCode: statusCode,
     };
   }
 }

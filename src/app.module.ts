@@ -12,6 +12,9 @@ import { join } from 'path';
 import { ProfileModule } from './app/profile/profile.module';
 import { UniqueValidator } from './utils/validator/unique.validator';
 import { QueryBuilderModule } from './query-builder/query-builder.module';
+import { KelasModule } from './app/kelas/kelas.module';
+import { MapelModule } from './app/mapel/mapel.module';
+import { JadwalModule } from './app/jadwal/jadwal.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { QueryBuilderModule } from './query-builder/query-builder.module';
     MailModule,
     QueryBuilderModule,
     ProfileModule,
+    KelasModule,
+    MapelModule,
+    JadwalModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, UniqueValidator],

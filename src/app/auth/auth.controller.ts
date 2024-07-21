@@ -16,6 +16,8 @@ import { JwtGuard, JwtGuardRefreshToken } from './auth.guard';
 import { ResponseSuccess } from 'src/interface/respone';
 import { query } from 'express';
 import { Pagination } from 'src/utils/decorator/pagination.decorator';
+import { RegisterGuruDto } from './user dto/guru.dto';
+import { CreateStudentDto } from './user dto/siswa.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -40,6 +42,16 @@ export class AuthController {
   @Post('register-bulk')
   async registerBulk(@Body() payloads: RegisterDto[]): Promise<ResponseSuccess> {
     return this.authService.registerBulk(payloads);
+  }
+
+  @Post('register/guru')
+  async registerGuru(@Body() createGuruDto: RegisterGuruDto) {
+    return this.authService.registerGuru(createGuruDto);
+  }
+
+  @Post('register/siswa')
+  async registerSiswa(@Body() CreateStudentDto: CreateStudentDto) {
+    return this.authService.registerStudent(CreateStudentDto);
   }
 
   @Post('login')

@@ -5,11 +5,21 @@ import {
   Column,
   OneToMany,
 } from 'typeorm';
+import { Siswa } from './user entity/siswa.entity';
+import { Guru } from './user entity/guru.entity';
+import { Staf } from './user entity/staf.entity';
+import { Kelas } from '../kelas/kelas.entity';
+import { Mapel } from '../mapel/mapel.entity';
+
 export enum UserRole {
-  Pembeli = 'pembeli',
-  Penjual = 'penjual',
-  Admin = 'admin',
+  ADMIN = 'Admin',
+  GURU = 'Guru',
+  SISWA = 'Murid',
+  STAF = 'Staf',
+  KEPALA_SEKOLAH = 'KepalaSekolah',
+  WALI_KELAS = 'WaliKelas',
 }
+
 @Entity()
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
@@ -22,7 +32,7 @@ export class User extends BaseEntity {
   nama: string;
 
   @Column({ nullable: true })
-  NIK: string;
+  nomor_hp: string;
 
   @Column({ unique: true, nullable: false })
   email: string;
@@ -33,14 +43,33 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   refresh_token: string;
 
-  @Column({ nullable: false })
-  role: string;
+  @Column({ type: 'enum', enum: UserRole })
+  role: UserRole;
+
+  @OneToMany(() => Siswa, (user) => user.id)
+  siswa_id: Siswa
+
+  @OneToMany(() => Guru, (user) => user.id)
+  guru_id: Guru
+
+  @OneToMany(() => Staf, (user) => user.id)
+  staf_id: Staf
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   updated_at: Date;
+
+  @OneToMany(() => Kelas, (user) => user.created_by)
+  kelas_created_by: Kelas[]
+
+  @OneToMany(() => Kelas, (user) => user.updated_by)
+  kelas_updated_by: Kelas[]
+
+  @OneToMany(() => Mapel, (user) => user.created_by)
+  mapel_created_by: Mapel[]
+
+  @OneToMany(() => Mapel, (user) => user.updated_by)
+  mapel_updated_by: Mapel[]
 }
-
-

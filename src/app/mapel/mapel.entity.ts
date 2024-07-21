@@ -1,0 +1,33 @@
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Guru } from '../auth/user entity/guru.entity';
+import { Jadwal } from '../jadwal/jadwal.entity';
+import { User } from '../auth/auth.entity';
+
+@Entity()
+export class Mapel {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ length: 50 })
+  nama_mapel: string;
+
+  @OneToMany(() => Guru, guru => guru.mapel_id)
+  guru_id: Guru[];
+
+  @OneToMany(() => Jadwal, jadwal => jadwal.mapel_id)
+  jadwal_id: Jadwal[];
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'created_by' })
+  created_by: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'updated_by' })
+  updated_by: User;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  created_at: Date;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  updated_at: Date;
+}

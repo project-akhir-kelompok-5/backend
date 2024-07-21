@@ -8,6 +8,10 @@ import { JwtAccessTokenStrategy } from './jwtAccessToken.strategy';
 import { JwtRefreshTokenStrategy } from './jwtRefreshToken.strategy';
 import { MailModule } from '../mail/mail.module';
 import { ResetPassword } from './reset_password.entity';
+import { Guru } from './user entity/guru.entity';
+import { Mapel } from '../mapel/mapel.entity';
+import { Kelas } from '../kelas/kelas.entity';
+import { Siswa } from './user entity/siswa.entity';
 
 
 @Module({
@@ -15,6 +19,10 @@ import { ResetPassword } from './reset_password.entity';
     TypeOrmModule.forFeature([
       User,
       ResetPassword,
+      Guru,
+      Mapel,
+      Kelas,
+      Siswa
     ]),
     JwtModule.register({
       // global: true,

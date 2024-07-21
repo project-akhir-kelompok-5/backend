@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './auth.entity';
+import { User, UserRole } from './auth.entity';
 import { Repository } from 'typeorm';
 import { ResponseSuccess } from 'src/interface/respone/response.interface';
 import {
@@ -23,12 +23,23 @@ import { MailService } from '../mail/mail.service';
 import { randomBytes } from 'crypto';
 import { ResetPassword } from './reset_password.entity';
 import { promises } from 'dns';
+import { Guru } from './user entity/guru.entity';
+import { RegisterGuruDto } from './user dto/guru.dto';
+import { Mapel } from '../mapel/mapel.entity';
+import { Kelas } from '../kelas/kelas.entity';
+import { CreateStudentDto } from './user dto/siswa.dto';
+import { Siswa } from './user entity/siswa.entity';
 
 @Injectable()
 export class AuthService extends BaseResponse {
   constructor(
     @InjectRepository(User) private readonly authRepository: Repository<User>,
-
+    @InjectRepository(Guru) private readonly guruRepository: Repository<Guru>,
+    @InjectRepository(Siswa) private readonly siswaRepository: Repository<Siswa>,
+    @InjectRepository(Mapel)
+    private readonly mapelRepository: Repository<Mapel>,
+    @InjectRepository(Kelas)
+    private readonly kelasRepository: Repository<Kelas>,
     @InjectRepository(ResetPassword)
     private readonly resetPasswordRepository: Repository<ResetPassword>,
     private jwtService: JwtService,
@@ -82,9 +93,7 @@ export class AuthService extends BaseResponse {
     return this._success('Reset Password Berhasil, Silahkan login ulang');
   }
 
-  async DeleteBulkUser(
-    payload: DeleteBulkUserDto,
-  ): Promise<ResponseSuccess> {
+  async DeleteBulkUser(payload: DeleteBulkUserDto): Promise<ResponseSuccess> {
     try {
       let berhasil = 0;
       let gagal = 0;
@@ -152,6 +161,107 @@ export class AuthService extends BaseResponse {
     });
   } //membuat method untuk generate jwt
 
+  async registerGuru(createGuruDto: RegisterGuruDto): Promise<ResponseSuccess> {
+    const { nama, email, password, jurnal_kegiatan, kelas_id, mapel_id } =
+      createGuruDto;
+
+    // Check if user already exists
+    const existingUser = await this.authRepository.findOne({
+      where: { email },
+    });
+    if (existingUser) {
+      return this._error(
+        'User with this email already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Create and save user
+    const hashedPassword = await hash(password, 12);
+    const user = this.authRepository.create({
+      nama,
+      email,
+      password: hashedPassword,
+      role: UserRole.GURU,
+    });
+    await this.authRepository.save(user);
+
+    // Check if Kelas and Mapel exist
+    const kelas = await this.kelasRepository.findOne({
+      where: { id: kelas_id },
+    });
+    if (!kelas) {
+      return this._error('Kelas not found', HttpStatus.BAD_REQUEST);
+    }
+
+    const mapel = await this.mapelRepository.findOne({
+      where: { id: mapel_id },
+    });
+    if (!mapel) {
+      return this._error('Mapel not found', HttpStatus.BAD_REQUEST);
+    }
+
+    // Create and save guru
+    const guru = this.guruRepository.create({
+      user_id: user, // Correctly assign the user relation
+      jurnal_kegiatan,
+      kelas_id: kelas, // Use the actual object
+      mapel_id: mapel, // Use the actual object
+    });
+
+    const savedGuru = await this.guruRepository.save(guru);
+    return this._success('Guru registered successfully', savedGuru);
+  }
+
+  async registerStudent(
+    createStudentDto: CreateStudentDto,
+  ): Promise<ResponseSuccess> {
+    const { nama, email, password, kelas_id, NISN, tanggal_lahir, alamat } =
+      createStudentDto;
+
+    // Check if user already exists
+    const existingUser = await this.authRepository.findOne({
+      where: { email },
+    });
+    if (existingUser) {
+      return this._error(
+        'User with this email already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Create and save user
+    const hashedPassword = await hash(password, 12);
+    const user = this.authRepository.create({
+      nama,
+      email,
+      password: hashedPassword,
+      role: UserRole.SISWA,
+    });
+    await this.authRepository.save(user);
+
+    // Check if Kelas exists
+    const kelas = await this.kelasRepository.findOne({
+      where: { id: kelas_id },
+    });
+    if (!kelas) {
+      return this._error('Kelas not found', HttpStatus.BAD_REQUEST);
+    }
+
+    // Create and save student
+    const siswa = this.siswaRepository.create({
+      user_id: user,
+      kelas_id: kelas,
+      NISN,
+      tanggal_lahir,
+      alamat,
+      
+    });
+
+    const savedSiswa = await this.siswaRepository.save(siswa);
+    return this._success('Student registered successfully', savedSiswa);
+  }
+
   async registerBulk(payloads: RegisterDto[]): Promise<ResponseSuccess> {
     const createdUsers = [];
     for (const payload of payloads) {
@@ -169,12 +279,12 @@ export class AuthService extends BaseResponse {
       }
 
       payload.password = await hash(payload.password, 12); // hash password
-      const user = this.authRepository.create({ ...payload });
-      await this.authRepository.save({
-        ...user,
-        avatar: 'http://localhost:2009/uploads/1721363949798.svg',
-      });
-      createdUsers.push(user);
+      // const user = this.authRepository.create({ ...payload });
+      // await this.authRepository.save({
+      //   ...user,
+      //   avatar: 'http://localhost:2009/uploads/1721363949798.svg',
+      // });
+      // createdUsers.push(user);
     }
 
     return this._success('Bulk Register Berhasil', {
@@ -225,7 +335,6 @@ export class AuthService extends BaseResponse {
         refresh_token: true,
         role: true,
         avatar: true,
-        NIK: true,
       },
     });
     if (!checkUserExists) {
@@ -249,8 +358,7 @@ export class AuthService extends BaseResponse {
         id: checkUserExists.id,
         nama: checkUserExists.nama,
         email: checkUserExists.email,
-        NIK: checkUserExists.NIK,
-        role: checkUserExists.role,
+        // role: checkUserExists.role,
       };
 
       const access_token = await this.generateJWT(
@@ -291,7 +399,6 @@ export class AuthService extends BaseResponse {
         email: true,
         password: true,
         refresh_token: true,
-        NIK: true,
         role: true,
       },
     });
@@ -305,8 +412,7 @@ export class AuthService extends BaseResponse {
       id: checkUserExists.id,
       nama: checkUserExists.nama,
       email: checkUserExists.email,
-      role: checkUserExists.role,
-      NIK: checkUserExists.NIK,
+      // role: checkUserExists.role,
     };
 
     const access_token = await this.generateJWT(
