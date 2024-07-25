@@ -5,6 +5,8 @@ import BaseResponse from 'src/utils/response/base.response';
 import { JwtGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Request, Response } from 'express';
+import { Roles } from 'src/utils/decorator/roles.decorator';
+import { Role } from '../auth/roles.enum';
 
 
 @UseGuards(JwtGuard, RolesGuard)
@@ -14,7 +16,9 @@ export class AbsenController extends BaseResponse {
     super();
   }
 
+
   @Post('create/:jadwal_id')
+  @Roles(Role.GURU, Role.Murid)
   async create(@Param('jadwal_id') jadwal_id: number) {
     return await this.absenService.create(jadwal_id);
   }

@@ -43,18 +43,26 @@ export class KelasService extends BaseResponse {
 
   async findAll(): Promise<ResponseSuccess> {
     const kelasList = await this.kelasRepository.find({
-      relations: ['siswa'], // Load the related siswa
+      relations: ['siswa', 'siswa.user', 'siswa'], // Load related siswa and their associated user
     });
 
-    // Structure the response to include the students
-    const response = kelasList.map(kelas => ({
+    // Structure the response to include user with nested siswa
+    const response = kelasList.map((kelas) => ({
       id: kelas.id,
       nama_kelas: kelas.nama_kelas,
-      siswa: kelas.siswa.map(siswa => ({
-        id: siswa.id,
-        NISN: siswa.NISN,
-        tanggal_lahir: siswa.tanggal_lahir,
-        alamat: siswa.alamat,
+      users: kelas.siswa.map((siswa) => ({
+        id: siswa.user.id,
+        avatar: siswa.user.avatar,
+        nama: siswa.user.nama,
+        nomor_hp: siswa.user.nomor_hp,
+        email: siswa.user.email,
+        role: siswa.user.role,
+        siswa: {
+          id: siswa.id,
+          NISN: siswa.NISN,
+          tanggal_lahir: siswa.tanggal_lahir,
+          alamat: siswa.alamat,
+        },
       })),
     }));
 
@@ -66,26 +74,25 @@ export class KelasService extends BaseResponse {
       where: { id },
       relations: ['siswa'], // Ensure to load the related siswa
     });
-  
+
     if (!kelas) {
       throw new HttpException('Kelas not found', HttpStatus.NOT_FOUND);
     }
-  
+
     // Structure the response to include the students
     const response = {
       id: kelas.id,
       nama_kelas: kelas.nama_kelas,
-      siswa: kelas.siswa.map(siswa => ({
+      siswa: kelas.siswa.map((siswa) => ({
         id: siswa.id,
         NISN: siswa.NISN,
         tanggal_lahir: siswa.tanggal_lahir,
         alamat: siswa.alamat,
       })),
     };
-  
+
     return this._success('Detail of Kelas with Students', response);
   }
-  
 
   async update(
     id: number,

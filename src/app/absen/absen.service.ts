@@ -42,18 +42,20 @@ export class AbsenService extends BaseResponse {
   
     const user = await this.userRepository.findOne({
       where: { id: this.req.user.id },
-      relations: ['kelas'], // Ensure class information is loaded
+      relations: ['siswa'], // Ensure class information is loaded
     });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
+    console.log('siswa id', user.siswa.id);
+
   
-    if (user.role === Role.Murid) {
-      // Check if user.kelas is defined
-      if (user.kelas.id !== jadwal.kelas.id) {
-        throw new HttpException('Kelas berbeda, tidak bisa absen', HttpStatus.FORBIDDEN);
-      }
-    }
+    // if (user.role === Role.Murid) {
+    //   // Check if user.kelas is defined
+    //   if (user.kelas.id !== jadwal.kelas.id) {
+    //     throw new HttpException('Kelas berbeda, tidak bisa absen', HttpStatus.FORBIDDEN);
+    //   }
+    // }
   
     let status = Status.HADIR;
   
@@ -173,6 +175,7 @@ export class AbsenService extends BaseResponse {
     const absenList = await this.absenRepository.find({
       relations: ['jadwal', 'jadwal.mapel', 'jadwal.kelas', 'user'],
     });
+    
     return this._success('List of Attendance', absenList);
   }
 

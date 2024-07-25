@@ -37,7 +37,8 @@ export class MapelService extends BaseResponse {
         ...createMapelDto,
     
         created_by: {
-            id: this.req.user.id
+            id: this.req.user.id,
+            nama: this.req.user.nama
         }
     });
     const hasil = await this.mapelRepository.save(mapel);
