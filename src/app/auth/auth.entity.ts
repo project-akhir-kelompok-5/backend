@@ -41,16 +41,16 @@ export class User extends BaseEntity {
   @Column({ type: 'enum', enum: Role })
   role: Role;
 
-  @OneToMany(() => Siswa, (user) => user.id)
+  @OneToMany(() => Siswa, (siswa) => siswa.user)
   siswa: Siswa
 
-  @OneToMany(() => Guru, (user) => user.id)
+  @OneToMany(() => Guru, (guru) => guru.user)
   guru: Guru
 
-  @OneToMany(() => Staf, (user) => user.id)
+  @OneToMany(() => Staf, (staf) => staf.user)
   staf: Staf
 
-  @ManyToOne(() => Kelas, (kelas) => kelas.id, { nullable: true })
+  @ManyToOne(() => Kelas, (kelas) => kelas.user, { nullable: true })
   kelas: Kelas; 
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
