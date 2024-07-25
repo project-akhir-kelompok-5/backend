@@ -3,17 +3,21 @@ import { Guru } from '../auth/user entity/guru.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { User } from '../auth/auth.entity';
+import { Absen } from '../absen/absen.entity';
 
 @Entity()
 export class Jadwal {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Mapel, (mataPelajaran) => mataPelajaran.jadwal_id)
-  mapel_id: Mapel;
+  @ManyToOne(() => Mapel, (mataPelajaran) => mataPelajaran.jadwal)
+  mapel: Mapel;
 
-  @ManyToOne(() => Kelas, (kelas) => kelas.jadwal_id)
-  kelas_id: Kelas;
+  @ManyToOne(() => Kelas, (kelas) => kelas.jadwal)
+  kelas: Kelas;
+
+  @ManyToOne(() => Absen, (absen) => absen.jadwal)
+  absen: Absen;
 
   @Column({
     type: 'enum',

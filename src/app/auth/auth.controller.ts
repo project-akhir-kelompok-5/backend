@@ -8,6 +8,7 @@ import {
   Param,
   Put,
   Query,
+  HttpException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { DeleteBulkUserDto, LoginDto, queryUSerDTO, RegisterDto, ResetPasswordDto } from './auth.dto';
@@ -57,6 +58,15 @@ export class AuthController {
   @Post('login')
   async login(@Body() payload: LoginDto) {
     return this.authService.login(payload);
+  }
+
+  @Get('siswa-detail/:id')
+  async getStudentDetail(@Param('id') id: number) {
+    try {
+      return await this.authService.getSiswaDetail(id);
+    } catch (error) {
+      throw new HttpException(error.response, error.status);
+    }
   }
 
   @UseGuards(JwtGuard)

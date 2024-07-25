@@ -2,7 +2,7 @@ import { PartialType, PickType } from '@nestjs/mapped-types';
 import { ArrayMinSize, ArrayNotEmpty, IsArray, IsEmail, IsInt, IsOptional, IsString, Length, MinLength } from 'class-validator';
 import { PageRequestDto } from 'src/utils/dto/page.dto';
 import { PrimaryGeneratedColumn } from 'typeorm';
-import { UserRole } from './auth.entity';
+import { Role } from './roles.enum';
 
 export class UserDto {
   @PrimaryGeneratedColumn()
@@ -60,7 +60,7 @@ export class RegisterDto {
   password: string;
 
   @IsString()
-  role: UserRole;
+  role: Role;
 
   @IsOptional()
   @IsString()

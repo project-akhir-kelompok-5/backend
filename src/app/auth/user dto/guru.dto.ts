@@ -18,9 +18,9 @@ export class RegisterGuruDto {
 
   @IsInt()
   @IsNotEmpty()
-  kelas_id: number;
+  kelas: number;
 
   @IsInt()
   @IsNotEmpty()
-  mapel_id: number;
+  mapel: number;
 }

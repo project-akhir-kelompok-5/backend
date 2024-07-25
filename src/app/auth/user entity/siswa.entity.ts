@@ -8,11 +8,11 @@ export class Siswa {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, user => user.siswa_id)
-  user_id: User;
+  @ManyToOne(() => User, user => user.siswa)
+  user: User;
 
-  @ManyToOne(() => Kelas, kelas => kelas.siswa_id)
-  kelas_id: Kelas;
+  @ManyToOne(() => Kelas, kelas => kelas.siswa)
+  kelas: Kelas;
 
   @Column()
   NISN: string;
@@ -22,4 +22,10 @@ export class Siswa {
 
   @Column()
   alamat: string;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  created_at: Date;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  updated_at: Date;
 }

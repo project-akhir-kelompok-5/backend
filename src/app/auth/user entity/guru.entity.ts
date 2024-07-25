@@ -9,15 +9,21 @@ export class Guru {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, user => user.guru_id)
-  user_id: User;
+  @ManyToOne(() => User, user => user.guru, {eager: true})
+  user: User;
 
   @Column({nullable: true})
   jurnal_kegiatan: string;
 
-  @ManyToOne(() => Kelas, kelas => kelas.id)
-  kelas_id: Kelas;
+  @ManyToOne(() => Kelas, kelas => kelas)
+  kelas: Kelas;
 
-  @ManyToOne(() => Mapel, mapel => mapel.guru_id)
-  mapel_id: Kelas;
+  @ManyToOne(() => Mapel, mapel => mapel.guru)
+  mapel: Kelas;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  created_at: Date;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  updated_at: Date;
 }

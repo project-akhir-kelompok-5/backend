@@ -3,5 +3,5 @@ interface jwtPayload {
   id: number | string;
   nama: string;
   email: string;
-  // role: string;
+  role: string;
 }

@@ -1,9 +1,13 @@
 // src/app/jadwal/jadwal.service.ts
 import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Jadwal } from './jadwal.entity';
-import { CreateJadwalDto } from './jadwal.dto';
+import {
+  CreateJadwalDto,
+  FindAllJadwalDTO,
+  UpdateJadwalDto,
+} from './jadwal.dto';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import BaseResponse from 'src/utils/response/base.response';
@@ -26,8 +30,8 @@ export class JadwalService extends BaseResponse {
 
   async create(createJadwalDto: CreateJadwalDto): Promise<ResponseSuccess> {
     const {
-      mapel_id,
-      kelas_id,
+      mapel,
+      kelas,
       hari,
       jam_mulai,
       jam_selesai,
@@ -35,27 +39,27 @@ export class JadwalService extends BaseResponse {
       //   updated_by,
     } = createJadwalDto;
 
-    const mapel = await this.mapelRepository.findOne({
+    const mapelExixts = await this.mapelRepository.findOne({
       where: {
-        id: mapel_id,
+        id: mapel,
       },
     });
-    if (!mapel) {
+    if (!mapelExixts) {
       throw new HttpException('Mapel not found', HttpStatus.NOT_FOUND);
     }
 
-    const kelas = await this.kelasRepository.findOne({
+    const kelasExixts = await this.kelasRepository.findOne({
       where: {
-        id: kelas_id,
+        id: kelas,
       },
     });
-    if (!kelas) {
+    if (!kelasExixts) {
       throw new HttpException('Kelas not found', HttpStatus.NOT_FOUND);
     }
 
     const jadwal = this.jadwalRepository.create({
-      mapel_id: mapel,
-      kelas_id: kelas,
+      mapel: mapelExixts,
+      kelas: kelasExixts,
       hari,
       jam_mulai,
       jam_selesai,
@@ -63,51 +67,76 @@ export class JadwalService extends BaseResponse {
         id: this.req.user.id,
       },
     });
-    
 
     await this.jadwalRepository.save(jadwal);
     return this._success('Jadwal created successfully', jadwal);
   }
 
-  async findAll(): Promise<ResponseSuccess> {
-    const jadwalList = await this.jadwalRepository.find({
-      relations: ['mapel_id.created_by', 'kelas_id.created_by', 'created_by', 'updated_by', ] ,
-    });
+  async findAll(query: FindAllJadwalDTO): Promise<ResponseSuccess> {
+    const { hari, mapel, kelas, limit } = query;
+    const queryBuilder = this.jadwalRepository
+      .createQueryBuilder('jadwal')
+      .limit(limit)
+      .leftJoinAndSelect('jadwal.mapel', 'mapel')
+      .leftJoinAndSelect('jadwal.kelas', 'kelas')
+      .leftJoinAndSelect('jadwal.created_by', 'created_by')
+      .leftJoinAndSelect('jadwal.updated_by', 'updated_by');
+
+    if (hari) {
+      queryBuilder.andWhere('jadwal.hari LIKE :hari', { hari: `%${hari}%` });
+    }
+
+    if (mapel) {
+      queryBuilder.andWhere('jadwal.mapel LIKE :mapel', {
+        mapel: `%${mapel}%`,
+      });
+    }
+
+    if (kelas) {
+      queryBuilder.andWhere('jadwal.kelas LIKE :kelas', {
+        kelas: `%${kelas}%`,
+      });
+    }
+
+    const jadwalList = await queryBuilder.getMany();
     return this._success('List of Jadwal', jadwalList);
   }
 
-  async update(id: number, updateJadwalDto: UpdateJadwalDto): Promise<ResponseSuccess> {
+  async update(
+    id: number,
+    updateJadwalDto: UpdateJadwalDto,
+  ): Promise<ResponseSuccess> {
     const jadwal = await this.jadwalRepository.findOne({
       where: { id },
-      relations: ['mapel_id', 'kelas_id'],
+      relations: ['mapel', 'kelas'],
     });
 
     if (!jadwal) {
       throw new HttpException('Jadwal not found', HttpStatus.NOT_FOUND);
     }
 
-    if (updateJadwalDto.mapel_id) {
+    if (updateJadwalDto.mapel) {
       const mapel = await this.mapelRepository.findOne({
         where: {
-          id: updateJadwalDto.mapel_id,
+          id: updateJadwalDto.mapel,
         },
       });
       if (!mapel) {
         throw new HttpException('Mapel not found', HttpStatus.NOT_FOUND);
       }
-      jadwal.mapel_id = mapel;
+      jadwal.mapel = mapel;
     }
 
-    if (updateJadwalDto.kelas_id) {
+    if (updateJadwalDto.kelas) {
       const kelas = await this.kelasRepository.findOne({
         where: {
-          id: updateJadwalDto.kelas_id,
+          id: updateJadwalDto.kelas,
         },
       });
       if (!kelas) {
         throw new HttpException('Kelas not found', HttpStatus.NOT_FOUND);
       }
-      jadwal.kelas_id = kelas;
+      jadwal.kelas = kelas;
     }
 
     if (updateJadwalDto.hari) {
@@ -136,5 +165,16 @@ export class JadwalService extends BaseResponse {
 
     await this.jadwalRepository.remove(jadwal);
     return this._success('Jadwal deleted successfully', jadwal);
+  }
+
+  async deleteBulk(data: number[]): Promise<ResponseSuccess> {
+    const jadwals = await this.jadwalRepository.find({ where: { id: In(data) } });
+
+    if (jadwals.length === 0) {
+      throw new HttpException('Jadwal not found', HttpStatus.NOT_FOUND);
+    }
+
+    await this.jadwalRepository.remove(jadwals);
+    return this._success('Jadwal deleted successfully', jadwals);
   }
 }

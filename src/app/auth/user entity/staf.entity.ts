@@ -8,9 +8,15 @@ export class Staf {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, user => user.guru_id)
+  @ManyToOne(() => User, user => user.guru)
   user: User;
 
   @Column({nullable: true})
   jurnal_kegiatan: string;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  created_at: Date;
+
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  updated_at: Date;
 }

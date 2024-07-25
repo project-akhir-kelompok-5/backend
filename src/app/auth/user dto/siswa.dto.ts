@@ -16,7 +16,7 @@ export class CreateStudentDto {
 
   @IsNotEmpty()
   @IsNumber()
-  kelas_id: number;
+  kelas: number;
 
   @IsNotEmpty()
   @IsString()

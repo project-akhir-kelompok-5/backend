@@ -1,12 +1,21 @@
 // src/app/jadwal/jadwal.dto.ts
-import { IsEnum, IsString, IsInt, IsDateString, IsNumber, IsObject, IsOptional } from 'class-validator';
+import {
+  IsEnum,
+  IsString,
+  IsInt,
+  IsDateString,
+  IsNumber,
+  IsObject,
+  IsOptional,
+} from 'class-validator';
+import { PageRequestDto } from 'src/utils/dto/page.dto';
 
 export class CreateJadwalDto {
   @IsNumber()
-  mapel_id: number;
+  mapel: number;
 
   @IsNumber()
-  kelas_id: number;
+  kelas: number;
 
   @IsEnum(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
   hari: string;
@@ -24,10 +33,10 @@ export class CreateJadwalDto {
 
 export class UpdateJadwalDto {
   @IsNumber()
-  mapel_id: number;
+  mapel: number;
 
   @IsNumber()
-  kelas_id: number;
+  kelas: number;
 
   @IsEnum(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
   hari: string;
@@ -41,4 +50,18 @@ export class UpdateJadwalDto {
   @IsObject()
   @IsOptional()
   updated_by: { id: number };
+}
+
+export class FindAllJadwalDTO extends PageRequestDto {
+  @IsOptional()
+  @IsString()
+  hari: string;
+
+  @IsOptional()
+  @IsString()
+  kelas: string;
+
+  @IsOptional()
+  @IsString()
+  mapel: string;
 }

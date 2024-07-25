@@ -15,6 +15,9 @@ import { QueryBuilderModule } from './query-builder/query-builder.module';
 import { KelasModule } from './app/kelas/kelas.module';
 import { MapelModule } from './app/mapel/mapel.module';
 import { JadwalModule } from './app/jadwal/jadwal.module';
+import { AbsenModule } from './app/absen/absen.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './app/auth/roles.guard';
 
 @Module({
   imports: [
@@ -32,6 +35,7 @@ import { JadwalModule } from './app/jadwal/jadwal.module';
     KelasModule,
     MapelModule,
     JadwalModule,
+    AbsenModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, UniqueValidator],

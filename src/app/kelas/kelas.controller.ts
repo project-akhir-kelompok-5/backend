@@ -54,4 +54,9 @@ export class KelasController {
     const idsArray = ids.split(',').map((id) => parseInt(id, 10));
     return this.kelasService.deleteBulk(idsArray);
   }
+
+  @Get('detail/:id')
+  async getKelasDetail(@Param('id') id: number): Promise<ResponseSuccess> {
+    return this.kelasService.findOneWithStudents(id);
+  }
 }

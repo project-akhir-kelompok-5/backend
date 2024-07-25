@@ -16,14 +16,17 @@ export class Kelas {
   @Column({ length: 50 })
   nama_kelas: string;
 
-  @OneToMany(() => Guru, Guru => Guru.kelas_id)
-  guru_id: Guru[];
+  @OneToMany(() => Guru, Guru => Guru.kelas)
+  guru: Guru[];
 
-  @OneToMany(() => Siswa, siswa => siswa.kelas_id)
-  siswa_id: Siswa[];
+  @OneToMany(() => Siswa, siswa => siswa.kelas)
+  siswa: Siswa[];
 
-  @OneToMany(() => Jadwal, jadwal => jadwal.kelas_id)
-  jadwal_id: Siswa[];
+  @OneToMany(() => Jadwal, jadwal => jadwal.kelas)
+  jadwal: Siswa[];
+
+  @OneToMany(() => User, (user) => user.kelas)
+  user: User[];
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })

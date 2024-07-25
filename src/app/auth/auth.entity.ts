@@ -4,21 +4,16 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import { Siswa } from './user entity/siswa.entity';
 import { Guru } from './user entity/guru.entity';
 import { Staf } from './user entity/staf.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { Mapel } from '../mapel/mapel.entity';
+import { Role } from './roles.enum';
 
-export enum UserRole {
-  ADMIN = 'Admin',
-  GURU = 'Guru',
-  SISWA = 'Murid',
-  STAF = 'Staf',
-  KEPALA_SEKOLAH = 'KepalaSekolah',
-  WALI_KELAS = 'WaliKelas',
-}
+
 
 @Entity()
 export class User extends BaseEntity {
@@ -43,17 +38,20 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   refresh_token: string;
 
-  @Column({ type: 'enum', enum: UserRole })
-  role: UserRole;
+  @Column({ type: 'enum', enum: Role })
+  role: Role;
 
   @OneToMany(() => Siswa, (user) => user.id)
-  siswa_id: Siswa
+  siswa: Siswa
 
   @OneToMany(() => Guru, (user) => user.id)
-  guru_id: Guru
+  guru: Guru
 
   @OneToMany(() => Staf, (user) => user.id)
-  staf_id: Staf
+  staf: Staf
+
+  @ManyToOne(() => Kelas, (kelas) => kelas.id, { nullable: true })
+  kelas: Kelas; 
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;

@@ -42,10 +42,50 @@ export class KelasService extends BaseResponse {
   }
 
   async findAll(): Promise<ResponseSuccess> {
-    const kelasList = await this.kelasRepository.find();
+    const kelasList = await this.kelasRepository.find({
+      relations: ['siswa'], // Load the related siswa
+    });
 
-    return this._success('List of Kelas', kelasList);
+    // Structure the response to include the students
+    const response = kelasList.map(kelas => ({
+      id: kelas.id,
+      nama_kelas: kelas.nama_kelas,
+      siswa: kelas.siswa.map(siswa => ({
+        id: siswa.id,
+        NISN: siswa.NISN,
+        tanggal_lahir: siswa.tanggal_lahir,
+        alamat: siswa.alamat,
+      })),
+    }));
+
+    return this._success('List of Kelas with Students', response);
   }
+
+  async findOneWithStudents(id: number): Promise<ResponseSuccess> {
+    const kelas = await this.kelasRepository.findOne({
+      where: { id },
+      relations: ['siswa'], // Ensure to load the related siswa
+    });
+  
+    if (!kelas) {
+      throw new HttpException('Kelas not found', HttpStatus.NOT_FOUND);
+    }
+  
+    // Structure the response to include the students
+    const response = {
+      id: kelas.id,
+      nama_kelas: kelas.nama_kelas,
+      siswa: kelas.siswa.map(siswa => ({
+        id: siswa.id,
+        NISN: siswa.NISN,
+        tanggal_lahir: siswa.tanggal_lahir,
+        alamat: siswa.alamat,
+      })),
+    };
+  
+    return this._success('Detail of Kelas with Students', response);
+  }
+  
 
   async update(
     id: number,

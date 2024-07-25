@@ -11,11 +11,11 @@ export class Mapel {
   @Column({ length: 50 })
   nama_mapel: string;
 
-  @OneToMany(() => Guru, guru => guru.mapel_id)
-  guru_id: Guru[];
+  @OneToMany(() => Guru, guru => guru.mapel)
+  guru: Guru[];
 
-  @OneToMany(() => Jadwal, jadwal => jadwal.mapel_id)
-  jadwal_id: Jadwal[];
+  @OneToMany(() => Jadwal, jadwal => jadwal.mapel)
+  jadwal: Jadwal[];
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
