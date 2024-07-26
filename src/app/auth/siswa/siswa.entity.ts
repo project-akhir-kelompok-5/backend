@@ -1,17 +1,27 @@
 // student.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  PrimaryColumn,
+  OneToOne,
+} from 'typeorm';
 import { User } from '../auth.entity';
 import { Kelas } from 'src/app/kelas/kelas.entity';
 
 @Entity()
 export class Siswa {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: number;
 
-  @ManyToOne(() => User, user => user.siswa)
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'id' })
   user: User;
 
-  @ManyToOne(() => Kelas, kelas => kelas.siswa)
+  @ManyToOne(() => Kelas, (kelas) => kelas.siswa, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'kelasId' })
   kelas: Kelas;
 
   @Column()

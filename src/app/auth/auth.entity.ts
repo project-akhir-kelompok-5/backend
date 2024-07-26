@@ -6,8 +6,8 @@ import {
   OneToMany,
   ManyToOne,
 } from 'typeorm';
-import { Siswa } from './user entity/siswa.entity';
-import { Guru } from './user entity/guru.entity';
+import { Siswa } from './siswa/siswa.entity';
+import { Guru } from './guru/guru.entity';
 import { Staf } from './user entity/staf.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { Mapel } from '../mapel/mapel.entity';

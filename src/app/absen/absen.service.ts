@@ -47,15 +47,18 @@ export class AbsenService extends BaseResponse {
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-    console.log('siswa id', user.siswa.id);
-
   
-    // if (user.role === Role.Murid) {
-    //   // Check if user.kelas is defined
-    //   if (user.kelas.id !== jadwal.kelas.id) {
-    //     throw new HttpException('Kelas berbeda, tidak bisa absen', HttpStatus.FORBIDDEN);
-    //   }
-    // }
+    // Check if the user has already logged attendance for the given schedule
+    const existingAbsen = await this.absenRepository.findOne({
+      where: {
+        jadwal: { id: jadwal_id },
+        user: { id: user.id },
+      },
+    });
+  
+    if (existingAbsen) {
+      return this._error('Anda sudah absen untuk jadwal ini', HttpStatus.BAD_REQUEST);
+    }
   
     let status = Status.HADIR;
   
@@ -82,9 +85,7 @@ export class AbsenService extends BaseResponse {
       // Check if a teacher has already marked attendance for the given jadwal
       const absensiGuru = await this.absenRepository.findOne({
         where: {
-          jadwal: {
-            id: jadwal_id
-          },
+          jadwal: { id: jadwal_id },
           user: { role: Role.GURU },
         },
       });
@@ -93,6 +94,8 @@ export class AbsenService extends BaseResponse {
         throw new HttpException('Tidak bisa absen karena tidak ada guru yang absen', HttpStatus.FORBIDDEN);
       }
     }
+  
+    const hasilJurnalKegiatan = user.role === Role.Murid ? '' : 'belum ada';
   
     const absen = this.absenRepository.create({
       jadwal: {
@@ -108,76 +111,80 @@ export class AbsenService extends BaseResponse {
       },
       waktu_absen: currentTime,
       status,
+      hasil_jurnal_kegiatan: hasilJurnalKegiatan,
     });
   
     await this.absenRepository.save(absen);
     return this._success('Absensi Berhasil', absen);
   }
   
+  
+  async findAll(query: any): Promise<ResponseSuccess> {
+    const { role, jadwal_id } = query;
+    
+    const where: any = {};
+    if (role) where.user = { role };
+    if (jadwal_id) where.jadwal = { id: jadwal_id };
+    
+    const absenList = await this.absenRepository.find({
+      where,
+      relations: ['jadwal', 'jadwal.mapel', 'jadwal.kelas', 'user'],
+    });
 
-  async logExit(jadwal_id: number): Promise<ResponseSuccess> {
+    return this._success('Filtered Attendance List', absenList);
+  }
+
+  async logExit(jadwal_id: number, hasil_jurnal_kegiatan: string): Promise<ResponseSuccess> {
     const jadwal = await this.jadwalRepository.findOne({ where: { id: jadwal_id } });
     if (!jadwal) {
       throw new HttpException('Jadwal not found', HttpStatus.NOT_FOUND);
     }
-
+  
     const currentTime = new Date();
     const [endHours, endMinutes] = jadwal.jam_selesai.split(':').map(Number);
-
+  
     const scheduleEndTime = new Date(currentTime);
     scheduleEndTime.setHours(endHours, endMinutes, 0, 0);
-
+  
     let warning = '';
     if (currentTime.getTime() > scheduleEndTime.getTime()) {
       warning = 'Peringatan: Waktu keluar melebihi jadwal!';
     }
-
+  
     const user = await this.userRepository.findOne({ where: { id: this.req.user.id } });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-
+  
     const existingAbsen = await this.absenRepository.findOne({
       where: {
-        jadwal: {
-          id: jadwal_id
-        },
+        jadwal: { id: jadwal_id },
         user: { id: user.id },
         hasil_jurnal_kegiatan: Not('belum ada') // Check if exit has already been logged
       }
     });
-
+  
     if (existingAbsen) {
       return this._error('Anda sudah keluar dari absensi', HttpStatus.BAD_REQUEST);
     }
-
+  
     const absen = await this.absenRepository.findOne({
       where: {
-        jadwal: {
-          id: jadwal_id
-        },
+        jadwal: { id: jadwal_id },
         user: { id: user.id }
       },
       order: { waktu_absen: 'DESC' }
     });
-
+  
     if (!absen) {
       throw new HttpException('No attendance found for this schedule', HttpStatus.NOT_FOUND);
     }
-
-    absen.hasil_jurnal_kegiatan = warning;
-
+  
+    absen.hasil_jurnal_kegiatan = hasil_jurnal_kegiatan || warning;
+  
     await this.absenRepository.save(absen);
-    return this._success('Exit attendance logged successfully', { ...absen, warning });
-  }
-
-  async findAll(query: any): Promise<ResponseSuccess> {
-    const absenList = await this.absenRepository.find({
-      relations: ['jadwal', 'jadwal.mapel', 'jadwal.kelas', 'user'],
-    });
-    
-    return this._success('List of Attendance', absenList);
-  }
+    return this._success('Berhasil keluar dari absen', { ...absen, warning });
+  }  
 
   async update(id: number, updateAbsenDto: UpdateAbsenDto): Promise<ResponseSuccess> {
     const absen = await this.absenRepository.findOne({

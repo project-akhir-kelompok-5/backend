@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { AbsenService } from './absen.service';
 import { CreateAbsenDto, UpdateAbsenDto } from './absen.dto';
 import BaseResponse from 'src/utils/response/base.response';
@@ -7,7 +19,7 @@ import { RolesGuard } from '../auth/roles.guard';
 import { Request, Response } from 'express';
 import { Roles } from 'src/utils/decorator/roles.decorator';
 import { Role } from '../auth/roles.enum';
-
+import { ResponseSuccess } from 'src/interface/respone';
 
 @UseGuards(JwtGuard, RolesGuard)
 @Controller('absen')
@@ -15,7 +27,6 @@ export class AbsenController extends BaseResponse {
   constructor(private readonly absenService: AbsenService) {
     super();
   }
-
 
   @Post('create/:jadwal_id')
   @Roles(Role.GURU, Role.Murid)
@@ -31,15 +42,16 @@ export class AbsenController extends BaseResponse {
   @Post('exit/:jadwal_id')
   async logExit(
     @Param('jadwal_id') jadwal_id: number,
-    @Req() req: Request,
-    @Res() res: Response
-  ) {
-    const result = await this.absenService.logExit(jadwal_id);
-    return res.json(result);
+    @Body('hasil_jurnal_kegiatan') hasil_jurnal_kegiatan: string,
+  ): Promise<ResponseSuccess> {
+    return this.absenService.logExit(jadwal_id, hasil_jurnal_kegiatan);
   }
 
   @Put('update/:id')
-  async update(@Param('id') id: number, @Body() updateAbsenDto: UpdateAbsenDto) {
+  async update(
+    @Param('id') id: number,
+    @Body() updateAbsenDto: UpdateAbsenDto,
+  ) {
     return await this.absenService.update(id, updateAbsenDto);
   }
 

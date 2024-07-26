@@ -1,7 +1,7 @@
 // kelas.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
-import { Guru } from '../auth/user entity/guru.entity';
-import { Siswa } from '../auth/user entity/siswa.entity';
+import { Guru } from '../auth/guru/guru.entity';
+import { Siswa } from '../auth/siswa/siswa.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/auth.guard';
@@ -16,8 +16,8 @@ export class Kelas {
   @Column({ length: 50 })
   nama_kelas: string;
 
-  @OneToMany(() => Guru, Guru => Guru.kelas)
-  guru: Guru[];
+  // @OneToMany(() => Guru, Guru => Guru.kelas)
+  // guru: Guru[];
 
   @OneToMany(() => Siswa, siswa => siswa.kelas)
   siswa: Siswa[];

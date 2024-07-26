@@ -1,5 +1,5 @@
 // teacher.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
 import { User } from '../auth.entity';
 import { Kelas } from 'src/app/kelas/kelas.entity';
 import { Mapel } from 'src/app/mapel/mapel.entity';
@@ -12,14 +12,9 @@ export class Guru {
   @ManyToOne(() => User, user => user.guru, {eager: true})
   user: User;
 
-  @Column({nullable: true})
-  jurnal_kegiatan: string;
-
-  @ManyToOne(() => Kelas, kelas => kelas)
-  kelas: Kelas;
-
-  @ManyToOne(() => Mapel, mapel => mapel.guru)
-  mapel: Kelas;
+  @ManyToMany(() => Mapel, mapel => mapel.guru)
+  @JoinTable()
+  mapel: Mapel[];
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;

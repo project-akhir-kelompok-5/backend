@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
-import { Guru } from '../auth/user entity/guru.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
+import { Guru } from '../auth/guru/guru.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { User } from '../auth/auth.entity';
 
@@ -11,7 +11,7 @@ export class Mapel {
   @Column({ length: 50 })
   nama_mapel: string;
 
-  @OneToMany(() => Guru, guru => guru.mapel)
+  @ManyToMany(() => Guru, guru => guru.mapel)
   guru: Guru[];
 
   @OneToMany(() => Jadwal, jadwal => jadwal.mapel)

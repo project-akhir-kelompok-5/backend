@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Guru } from '../auth/user entity/guru.entity';
+import { Guru } from '../auth/guru/guru.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { User } from '../auth/auth.entity';
