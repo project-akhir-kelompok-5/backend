@@ -13,6 +13,9 @@ export class Mapel {
   @Column({ length: 50 })
   nama_mapel: string;
 
+  @Column({ length: 50 })
+  subject_code: string;
+
   @ManyToMany(() => Guru, guru => guru.mapel)
   guru: Guru[];
 

@@ -129,6 +129,8 @@ export class JadwalService extends BaseResponse {
           .filter((detail) => detail.jamJadwal.id === jamJadwal.id) // Filter by current jamJadwal ID
           .map((detail) => ({
             id: detail.id,
+            id_mapel: detail.mapel.id ? detail.mapel.id : null,
+            id_kelas: detail.kelas.id ? detail.kelas.id : null,
             nama_mapel: detail.mapel ? detail.mapel.nama_mapel : null,
             nama_kelas: detail.kelas ? detail.kelas.nama_kelas : null,
           })),

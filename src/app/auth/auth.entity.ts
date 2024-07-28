@@ -12,6 +12,7 @@ import { Staf } from './user entity/staf.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Role } from './roles.enum';
+import { Absen } from '../absen/absen.entity';
 
 
 
@@ -70,4 +71,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Mapel, (user) => user.updated_by)
   mapel_updated_by: Mapel[]
+
+  @OneToMany(() => Absen, absen => absen.user)
+  absen: Absen[];
 }

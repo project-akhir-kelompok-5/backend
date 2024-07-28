@@ -12,7 +12,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { AbsenService } from './absen.service';
-import { CreateAbsenDto, UpdateAbsenDto } from './absen.dto';
+import { CreateAbsenDto, FilterAbsenDto, UpdateAbsenDto } from './absen.dto';
 import BaseResponse from 'src/utils/response/base.response';
 import { JwtGuard } from '../auth/auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -28,15 +28,29 @@ export class AbsenController extends BaseResponse {
     super();
   }
 
-  // @Post('create/:jadwal_id')
-  // @Roles(Role.GURU, Role.Murid)
-  // async create(@Param('jadwal_id') jadwal_id: number) {
-  //   return await this.absenService.create(jadwal_id);
+  @Post('masuk')
+  async create(@Body() payload: CreateAbsenDto) {
+    return await this.absenService.createAbsen(payload);
+  }
+
+  // @Get('list-filter')
+  // async findAllWithFIlter(@Query() query: any) {
+  //   return await this.absenService.getAbsenListWIthFilter(query);
   // }
 
   @Get('list')
-  async findAll(@Query() query: any) {
-    return await this.absenService.findAll(query);
+  async findAll() {
+    return await this.absenService.list();
+  }
+
+  @Get('list-kelas/:id')
+  async findAllFilterKElas(@Param('id') id: number) {
+    return await this.absenService.listFilterKelas(id);
+  }
+
+  @Post('test-socket')
+  async testSocket() {
+    return this.absenService.testSocket();
   }
 
   // @Post('exit/:jadwal_id')

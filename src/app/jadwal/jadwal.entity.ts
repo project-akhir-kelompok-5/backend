@@ -24,6 +24,12 @@ export class Jadwal {
   @ManyToOne(() => Mapel, (mataPelajaran) => mataPelajaran.jadwal)
   mapel: Mapel;
 
+  @OneToMany(() => Absen, (absen) => absen.jadwal)
+  absen: Absen;
+
+  @ManyToOne(() => Kelas, kelas => kelas.jadwal)
+  kelas: Kelas;
+
   @OneToMany(() => JamJadwal, (jamJadwal) => jamJadwal.jadwal, {
     onDelete: 'CASCADE',
     cascade: ['insert', 'update']

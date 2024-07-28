@@ -24,8 +24,8 @@ export class Kelas {
   @OneToMany(() => Siswa, siswa => siswa.kelas)
   siswa: Siswa[];
 
-  // @OneToMany(() => Jadwal, jadwal => jadwal.kelas)
-  // jadwal: Jadwal[];
+  @OneToMany(() => Jadwal, jadwal => jadwal.kelas)
+  jadwal: Jadwal[];
 
   @OneToMany(() => JamJadwal, jadwal => jadwal.kelas)
   jam_jadwal: JamJadwal[];

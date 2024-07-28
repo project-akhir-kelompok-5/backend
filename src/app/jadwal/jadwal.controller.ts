@@ -27,10 +27,10 @@ export class JadwalController {
     return this.jadwalService.findAll();
   }
 
-  // @Put('update/:id')
-  // async update(@Param('id') id: number, @Body() updateJadwalDto: UpdateJadwalDto): Promise<ResponseSuccess> {
-  //   // return this.jadwalService.update(id, updateJadwalDto);
-  // }
+  @Put('update/:id')
+  async update(@Param('id') id: number, @Body() updateJadwalDto: UpdateJadwalDto): Promise<ResponseSuccess> {
+    return this.jadwalService.update(id, updateJadwalDto);
+  }
 
   @Delete('delete/:id')
   @Roles(Role.ADMIN)

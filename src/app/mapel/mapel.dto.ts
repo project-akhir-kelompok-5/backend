@@ -5,6 +5,10 @@ export class CreateMapelDto {
   @IsString()
   @IsNotEmpty()
   nama_mapel: string;
+
+  @IsString()
+  @IsNotEmpty()
+  subject_code: string;
   
   @IsObject()
   @IsOptional()
@@ -15,6 +19,10 @@ export class UpdateMapelDto {
   @IsString()
   @IsNotEmpty()
   nama_mapel: string;
+
+  @IsString()
+  @IsNotEmpty()
+  subject_code: string;
   
   @IsObject()
   @IsOptional()

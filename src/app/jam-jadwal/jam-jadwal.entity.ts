@@ -10,6 +10,7 @@ import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { JamDetailJadwal } from './jam-detail-jadwal.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
+import { Absen } from '../absen/absen.entity';
 
 @Entity()
 export class JamJadwal {
@@ -22,6 +23,9 @@ export class JamJadwal {
   @ManyToOne(() => Jadwal, (jadwal) => jadwal.jam_jadwal)
   @JoinColumn({name: 'jadwal_id'})
   jadwal: Jadwal;
+
+  @OneToMany(() => Absen, (absen) => absen.jadwal)
+  absen: Absen[]
 
   @ManyToOne(() => Mapel, (mapel) => mapel.jam_jadwal)
   mapel: Mapel;
