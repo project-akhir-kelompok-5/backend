@@ -28,24 +28,24 @@ export class AbsenController extends BaseResponse {
     super();
   }
 
-  @Post('create/:jadwal_id')
-  @Roles(Role.GURU, Role.Murid)
-  async create(@Param('jadwal_id') jadwal_id: number) {
-    return await this.absenService.create(jadwal_id);
-  }
+  // @Post('create/:jadwal_id')
+  // @Roles(Role.GURU, Role.Murid)
+  // async create(@Param('jadwal_id') jadwal_id: number) {
+  //   return await this.absenService.create(jadwal_id);
+  // }
 
   @Get('list')
   async findAll(@Query() query: any) {
     return await this.absenService.findAll(query);
   }
 
-  @Post('exit/:jadwal_id')
-  async logExit(
-    @Param('jadwal_id') jadwal_id: number,
-    @Body('hasil_jurnal_kegiatan') hasil_jurnal_kegiatan: string,
-  ): Promise<ResponseSuccess> {
-    return this.absenService.logExit(jadwal_id, hasil_jurnal_kegiatan);
-  }
+  // @Post('exit/:jadwal_id')
+  // async logExit(
+  //   @Param('jadwal_id') jadwal_id: number,
+  //   @Body('hasil_jurnal_kegiatan') hasil_jurnal_kegiatan: string,
+  // ): Promise<ResponseSuccess> {
+  //   return this.absenService.logExit(jadwal_id, hasil_jurnal_kegiatan);
+  // }
 
   @Put('update/:id')
   async update(

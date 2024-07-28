@@ -5,6 +5,7 @@ import { In, Repository } from 'typeorm';
 import { Jadwal } from './jadwal.entity';
 import {
   CreateJadwalDto,
+  // CreateJamDto,
   FindAllJadwalDTO,
   UpdateJadwalDto,
 } from './jadwal.dto';
@@ -13,6 +14,8 @@ import { Kelas } from '../kelas/kelas.entity';
 import BaseResponse from 'src/utils/response/base.response';
 import { ResponseSuccess } from 'src/interface/respone';
 import { REQUEST } from '@nestjs/core';
+import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 
 @Injectable()
 export class JadwalService extends BaseResponse {
@@ -23,83 +26,114 @@ export class JadwalService extends BaseResponse {
     private readonly mapelRepository: Repository<Mapel>,
     @InjectRepository(Kelas)
     private readonly kelasRepository: Repository<Kelas>,
+    @InjectRepository(JamJadwal)
+    private readonly jamJadwalRepository: Repository<JamJadwal>,
+    @InjectRepository(JamDetailJadwal)
+    private readonly jamDetailJadwalRepository: Repository<JamDetailJadwal>,
     @Inject(REQUEST) private req: any,
   ) {
     super();
   }
 
   async create(createJadwalDto: CreateJadwalDto): Promise<ResponseSuccess> {
-    const {
-      mapel,
-      kelas,
-      hari,
-      jam_mulai,
-      jam_selesai,
-      created_by,
-      //   updated_by,
-    } = createJadwalDto;
+    const { hari, jam_jadwal } = createJadwalDto;
 
-    const mapelExixts = await this.mapelRepository.findOne({
-      where: {
-        id: mapel,
-      },
-    });
-    if (!mapelExixts) {
-      throw new HttpException('Mapel not found', HttpStatus.NOT_FOUND);
-    }
-
-    const kelasExixts = await this.kelasRepository.findOne({
-      where: {
-        id: kelas,
-      },
-    });
-    if (!kelasExixts) {
-      throw new HttpException('Kelas not found', HttpStatus.NOT_FOUND);
-    }
-
+    // Create the Jadwal entity
     const jadwal = this.jadwalRepository.create({
-      mapel: mapelExixts,
-      kelas: kelasExixts,
       hari,
-      jam_mulai,
-      jam_selesai,
-      created_by: {
-        id: this.req.user.id,
-      },
+      created_by: { id: this.req.user.id },
     });
 
-    await this.jadwalRepository.save(jadwal);
-    return this._success('Jadwal created successfully', jadwal);
+    const savedJadwal = await this.jadwalRepository.save(jadwal);
+
+    for (const jamJadwalDto of jam_jadwal) {
+      // Create JamJadwal entities for each JamJadwalDto
+      const jamJadwal = new JamJadwal();
+      jamJadwal.jam_mulai = jamJadwalDto.jam_mulai;
+      jamJadwal.jam_selesai = jamJadwalDto.jam_selesai;
+      jamJadwal.jadwal = savedJadwal;
+
+      const savedJamJadwal = await this.jamJadwalRepository.save(jamJadwal);
+
+      // Create JamDetailJadwal entities for each JamDetailDto
+      const jamDetailJadwals = await Promise.all(
+        jamJadwalDto.jam_detail.map(async (jdDto) => {
+          const jamDetailJadwal = new JamDetailJadwal();
+          jamDetailJadwal.jamJadwal = savedJamJadwal;
+
+          const mapel = await this.mapelRepository.findOne({
+            where: {
+              id: jdDto.mapel,
+            },
+          });
+          const kelas = await this.kelasRepository.findOne({
+            where: {
+              id: jdDto.kelas,
+            },
+          });
+
+          if (!mapel || !kelas) {
+            throw new HttpException(
+              'Mapel or Kelas not found',
+              HttpStatus.NOT_FOUND,
+            );
+          }
+
+          jamDetailJadwal.mapel = mapel;
+          jamDetailJadwal.kelas = kelas;
+
+          return jamDetailJadwal;
+        }),
+      );
+
+      await this.jamDetailJadwalRepository.save(jamDetailJadwals);
+    }
+
+    return this._success('Jadwal created successfully', savedJadwal);
   }
 
-  async findAll(query: FindAllJadwalDTO): Promise<ResponseSuccess> {
-    const { hari, mapel, kelas, limit } = query;
-    const queryBuilder = this.jadwalRepository
-      .createQueryBuilder('jadwal')
-      .limit(limit)
-      .leftJoinAndSelect('jadwal.mapel', 'mapel')
-      .leftJoinAndSelect('jadwal.kelas', 'kelas')
-      .leftJoinAndSelect('jadwal.created_by', 'created_by')
-      .leftJoinAndSelect('jadwal.updated_by', 'updated_by');
+  async findAll(): Promise<any> {
+    const jadwalList = await this.jadwalRepository.find({
+      relations: [
+        'jam_jadwal',
+        'jam_jadwal.jam_detail',
+        'jam_jadwal.jam_detail.mapel',
+        'jam_jadwal.jam_detail.kelas',
+      ],
+    });
 
-    if (hari) {
-      queryBuilder.andWhere('jadwal.hari LIKE :hari', { hari: `%${hari}%` });
-    }
+    const jamJadwalList = await this.jamJadwalRepository.find({
+      relations: ['jam_detail', 'jam_detail.mapel', 'jam_detail.kelas'],
+    });
 
-    if (mapel) {
-      queryBuilder.andWhere('jadwal.mapel LIKE :mapel', {
-        mapel: `%${mapel}%`,
-      });
-    }
+    // Extract JamJadwal IDs
+    const jamJadwalIds = jamJadwalList.map((jamJadwal) => jamJadwal.id);
 
-    if (kelas) {
-      queryBuilder.andWhere('jadwal.kelas LIKE :kelas', {
-        kelas: `%${kelas}%`,
-      });
-    }
+    const jamDetailList = await this.jamDetailJadwalRepository.find({
+      relations: ['mapel', 'kelas', 'jamJadwal'], // Ensure the relation to 'jamJadwal' is included
+      where: {
+        jamJadwal: {
+          id: In(jamJadwalIds), // Use IN operator to filter by multiple IDs
+        },
+      },
+    });
 
-    const jadwalList = await queryBuilder.getMany();
-    return this._success('List of Jadwal', jadwalList);
+    return jadwalList.map((jadwal) => ({
+      id: jadwal.id,
+      hari: jadwal.hari,
+      jam_jadwal: jadwal.jam_jadwal.map((jamJadwal) => ({
+        id: jamJadwal.id,
+        jam_mulai: jamJadwal.jam_mulai,
+        jam_selesai: jamJadwal.jam_selesai,
+        jam_detail: jamDetailList
+          .filter((detail) => detail.jamJadwal.id === jamJadwal.id) // Filter by current jamJadwal ID
+          .map((detail) => ({
+            id: detail.id,
+            nama_mapel: detail.mapel ? detail.mapel.nama_mapel : null,
+            nama_kelas: detail.kelas ? detail.kelas.nama_kelas : null,
+          })),
+      })),
+    }));
   }
 
   async update(
@@ -108,52 +142,79 @@ export class JadwalService extends BaseResponse {
   ): Promise<ResponseSuccess> {
     const jadwal = await this.jadwalRepository.findOne({
       where: { id },
-      relations: ['mapel', 'kelas'],
+      relations: [
+        'jam_jadwal',
+        'jam_jadwal.jam_detail',
+        'jam_jadwal.jam_detail.mapel',
+        'jam_jadwal.jam_detail.kelas',
+      ],
     });
 
     if (!jadwal) {
       throw new HttpException('Jadwal not found', HttpStatus.NOT_FOUND);
     }
 
-    if (updateJadwalDto.mapel) {
-      const mapel = await this.mapelRepository.findOne({
-        where: {
-          id: updateJadwalDto.mapel,
-        },
-      });
-      if (!mapel) {
-        throw new HttpException('Mapel not found', HttpStatus.NOT_FOUND);
-      }
-      jadwal.mapel = mapel;
-    }
-
-    if (updateJadwalDto.kelas) {
-      const kelas = await this.kelasRepository.findOne({
-        where: {
-          id: updateJadwalDto.kelas,
-        },
-      });
-      if (!kelas) {
-        throw new HttpException('Kelas not found', HttpStatus.NOT_FOUND);
-      }
-      jadwal.kelas = kelas;
-    }
-
+    // Update basic jadwal properties
     if (updateJadwalDto.hari) {
       jadwal.hari = updateJadwalDto.hari;
     }
 
-    if (updateJadwalDto.jam_mulai) {
-      jadwal.jam_mulai = updateJadwalDto.jam_mulai;
+    // Update jam_jadwal and jam_detail
+    if (updateJadwalDto.jam_jadwal) {
+      // Delete existing jam_jadwal and jam_detail records
+      for (const jamJadwal of jadwal.jam_jadwal) {
+        await this.jamDetailJadwalRepository.delete({
+          jamJadwal: { id: jamJadwal.id },
+        });
+      }
+      await this.jamJadwalRepository.delete({ jadwal: { id: jadwal.id } });
+
+      // Create new jam_jadwal and jam_detail records
+      for (const jamJadwalDto of updateJadwalDto.jam_jadwal) {
+        const jamJadwal = new JamJadwal();
+        jamJadwal.jam_mulai = jamJadwalDto.jam_mulai;
+        jamJadwal.jam_selesai = jamJadwalDto.jam_selesai;
+        jamJadwal.jadwal = jadwal;
+
+        const savedJamJadwal = await this.jamJadwalRepository.save(jamJadwal);
+
+        const jamDetailJadwals = await Promise.all(
+          jamJadwalDto.jam_detail.map(async (jdDto) => {
+            const jamDetailJadwal = new JamDetailJadwal();
+            jamDetailJadwal.jamJadwal = savedJamJadwal;
+
+            const mapel = await this.mapelRepository.findOne({
+              where: {
+                id: jdDto.mapel,
+              },
+            });
+            const kelas = await this.kelasRepository.findOne({
+              where: {
+                id: jdDto.kelas,
+              },
+            });
+
+            if (!mapel || !kelas) {
+              throw new HttpException(
+                'Mapel or Kelas not found',
+                HttpStatus.NOT_FOUND,
+              );
+            }
+
+            jamDetailJadwal.mapel = mapel;
+            jamDetailJadwal.kelas = kelas;
+
+            return jamDetailJadwal;
+          }),
+        );
+
+        await this.jamDetailJadwalRepository.save(jamDetailJadwals);
+      }
     }
 
-    if (updateJadwalDto.jam_selesai) {
-      jadwal.jam_selesai = updateJadwalDto.jam_selesai;
-    }
-
-    jadwal.updated_by = this.req.user.id;
-    await this.jadwalRepository.save(jadwal);
-    return this._success('Jadwal updated successfully', jadwal);
+    // jadwal.updated_by = { id: this.req.user.id };
+    const updatedJadwal = await this.jadwalRepository.save(jadwal);
+    return this._success('Jadwal updated successfully', updatedJadwal);
   }
 
   async delete(id: number): Promise<ResponseSuccess> {
@@ -168,7 +229,9 @@ export class JadwalService extends BaseResponse {
   }
 
   async deleteBulk(data: number[]): Promise<ResponseSuccess> {
-    const jadwals = await this.jadwalRepository.find({ where: { id: In(data) } });
+    const jadwals = await this.jadwalRepository.find({
+      where: { id: In(data) },
+    });
 
     if (jadwals.length === 0) {
       throw new HttpException('Jadwal not found', HttpStatus.NOT_FOUND);

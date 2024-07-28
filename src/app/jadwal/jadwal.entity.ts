@@ -1,10 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Guru } from '../auth/guru/guru.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { User } from '../auth/auth.entity';
 import { Absen } from '../absen/absen.entity';
+import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
 
+
+export enum HariEnum {
+  Senin = 'Senin',
+  Selasa = 'Selasa',
+  Rabu = 'Rabu',
+  Kamis = 'Kamis',
+  Jumat = 'Jumat',
+  Sabtu = 'Sabtu',
+}
 @Entity()
 export class Jadwal {
   @PrimaryGeneratedColumn()
@@ -13,23 +24,17 @@ export class Jadwal {
   @ManyToOne(() => Mapel, (mataPelajaran) => mataPelajaran.jadwal)
   mapel: Mapel;
 
-  @ManyToOne(() => Kelas, (kelas) => kelas.jadwal)
-  kelas: Kelas;
-
-  @ManyToOne(() => Absen, (absen) => absen.jadwal)
-  absen: Absen;
+  @OneToMany(() => JamJadwal, (jamJadwal) => jamJadwal.jadwal, {
+    onDelete: 'CASCADE',
+    cascade: ['insert', 'update']
+  })
+  jam_jadwal: JamJadwal[];
 
   @Column({
     type: 'enum',
     enum: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
   })
   hari: string;
-
-  @Column('time')
-  jam_mulai: string;
-
-  @Column('time')
-  jam_selesai: string;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;

@@ -1,4 +1,5 @@
 // src/app/jadwal/jadwal.dto.ts
+import { Type } from 'class-transformer';
 import {
   IsEnum,
   IsString,
@@ -7,49 +8,63 @@ import {
   IsNumber,
   IsObject,
   IsOptional,
+  ValidateNested,
+  IsArray,
+  IsNotEmpty,
 } from 'class-validator';
 import { PageRequestDto } from 'src/utils/dto/page.dto';
+import { HariEnum } from './jadwal.entity';
 
-export class CreateJadwalDto {
+class JamDetailDto {
+  @IsNotEmpty()
   @IsNumber()
   mapel: number;
 
+  @IsNotEmpty()
   @IsNumber()
   kelas: number;
+}
 
-  @IsEnum(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
-  hari: string;
-
+class JamJadwalDto {
+  @IsNotEmpty()
   @IsString()
   jam_mulai: string;
 
+  @IsNotEmpty()
   @IsString()
   jam_selesai: string;
 
-  @IsObject()
-  @IsOptional()
-  created_by: { id: number };
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => JamDetailDto)
+  jam_detail: JamDetailDto[];
+}
+
+export class CreateJadwalDto {
+  @IsNotEmpty()
+  @IsEnum(HariEnum)
+  hari: HariEnum;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => JamJadwalDto)
+  jam_jadwal: JamJadwalDto[];
 }
 
 export class UpdateJadwalDto {
-  @IsNumber()
-  mapel: number;
+  @IsEnum(HariEnum)
+  @IsOptional()
+  hari?: HariEnum;
 
-  @IsNumber()
-  kelas: number;
-
-  @IsEnum(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'])
-  hari: string;
-
-  @IsString()
-  jam_mulai: string;
-
-  @IsString()
-  jam_selesai: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => JamJadwalDto)
+  @IsOptional()
+  jam_jadwal?: JamJadwalDto[];
 
   @IsObject()
   @IsOptional()
-  updated_by: { id: number };
+  updated_by?: { id: number };
 }
 
 export class FindAllJadwalDTO extends PageRequestDto {

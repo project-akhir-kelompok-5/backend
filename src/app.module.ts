@@ -18,6 +18,7 @@ import { JadwalModule } from './app/jadwal/jadwal.module';
 import { AbsenModule } from './app/absen/absen.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './app/auth/roles.guard';
+import { JamJadwalModule } from './app/jam-jadwal/jam-jadwal.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { RolesGuard } from './app/auth/roles.guard';
     MapelModule,
     JadwalModule,
     AbsenModule,
+    JamJadwalModule,
   ],
   controllers: [AppController, UploadController],
   providers: [AppService, UniqueValidator],

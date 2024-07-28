@@ -1,5 +1,5 @@
 // src/app/jadwal/jadwal.controller.ts
-import { Controller, Post, Get, Body, UseGuards, Request, Query, Put, Delete, Param } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, Query, Put, Delete, Param, Req } from '@nestjs/common';
 import { JadwalService } from './jadwal.service';
 import { CreateJadwalDto, FindAllJadwalDTO, UpdateJadwalDto } from './jadwal.dto';
 import { ResponseSuccess } from 'src/interface/respone';
@@ -20,16 +20,17 @@ export class JadwalController {
     return this.jadwalService.create(createJadwalDto);
   }
 
+
   @Get('list')
   // @Roles(Role.ADMIN)
-  async findAll(@Query() query:FindAllJadwalDTO): Promise<ResponseSuccess> {
-    return this.jadwalService.findAll(query);
+  async findAll(): Promise<ResponseSuccess> {
+    return this.jadwalService.findAll();
   }
 
-  @Put('update/:id')
-  async update(@Param('id') id: number, @Body() updateJadwalDto: UpdateJadwalDto): Promise<ResponseSuccess> {
-    return this.jadwalService.update(id, updateJadwalDto);
-  }
+  // @Put('update/:id')
+  // async update(@Param('id') id: number, @Body() updateJadwalDto: UpdateJadwalDto): Promise<ResponseSuccess> {
+  //   // return this.jadwalService.update(id, updateJadwalDto);
+  // }
 
   @Delete('delete/:id')
   @Roles(Role.ADMIN)

@@ -1,6 +1,6 @@
 // guru.service.ts
 
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import BaseResponse from 'src/utils/response/base.response';
 import { In, Repository } from 'typeorm';
@@ -11,6 +11,7 @@ import { RegisterGuruDto, UpdateGuruDto, DeleteBulkGuruDto } from './guru.dto';
 import { ResponseSuccess } from 'src/interface/respone';
 import { Role } from '../roles.enum';
 import { hash } from 'bcrypt';
+import { REQUEST } from '@nestjs/core';
 
 @Injectable()
 export class GuruService extends BaseResponse {
@@ -18,6 +19,7 @@ export class GuruService extends BaseResponse {
     @InjectRepository(Guru) private readonly guruRepository: Repository<Guru>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Mapel) private readonly mapelRepository: Repository<Mapel>,
+    @Inject(REQUEST) private req: any
   ) {
     super();
   }
@@ -124,9 +126,9 @@ export class GuruService extends BaseResponse {
     return this._success('List of teachers retrieved successfully', guruList);
   }
 
-  async getGuruProfile(userId: number): Promise<ResponseSuccess> {
+  async getGuruProfile(): Promise<ResponseSuccess> {
     const guru = await this.guruRepository.findOne({
-      where: { user: { id: userId } },
+      where: { user: { id: this.req.user.id } },
       relations: ['user', 'mapel'],
     });
 
@@ -136,7 +138,6 @@ export class GuruService extends BaseResponse {
 
     const { user, mapel } = guru;
 
-    // Prepare the response
     const teacherDetail = {
       id: user.id,
       nama: user.nama,

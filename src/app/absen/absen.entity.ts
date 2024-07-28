@@ -13,8 +13,8 @@ export class Absen {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Jadwal, (jadwal) => jadwal.absen)
-  jadwal: Jadwal;
+  // @ManyToOne(() => Jadwal, (jadwal) => jadwal.absen)
+  // jadwal: Jadwal;
 
   @ManyToOne(() => User) // Define relationship with User entity
   user: User;

@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColum
 import { Guru } from '../auth/guru/guru.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { User } from '../auth/auth.entity';
+import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 
 @Entity()
 export class Mapel {
@@ -16,6 +18,12 @@ export class Mapel {
 
   @OneToMany(() => Jadwal, jadwal => jadwal.mapel)
   jadwal: Jadwal[];
+
+  @OneToMany(() => JamJadwal, jadwal => jadwal.mapel)
+  jam_jadwal: JamJadwal[];
+
+  @OneToMany(() => JamDetailJadwal, jamJadwal => jamJadwal.kelas)
+  jamDetail: JamDetailJadwal[];
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })

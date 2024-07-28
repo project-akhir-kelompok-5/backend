@@ -6,6 +6,8 @@ import { Jadwal } from '../jadwal/jadwal.entity';
 import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/auth.guard';
 import { User } from '../auth/auth.entity';
+import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 
 UseGuards(JwtGuard)
 @Entity()
@@ -16,14 +18,17 @@ export class Kelas {
   @Column({ length: 50 })
   nama_kelas: string;
 
-  // @OneToMany(() => Guru, Guru => Guru.kelas)
-  // guru: Guru[];
+  @OneToMany(() => JamDetailJadwal, jamJadwal => jamJadwal.kelas)
+  jamDetail: JamDetailJadwal[];
 
   @OneToMany(() => Siswa, siswa => siswa.kelas)
   siswa: Siswa[];
 
-  @OneToMany(() => Jadwal, jadwal => jadwal.kelas)
-  jadwal: Siswa[];
+  // @OneToMany(() => Jadwal, jadwal => jadwal.kelas)
+  // jadwal: Jadwal[];
+
+  @OneToMany(() => JamJadwal, jadwal => jadwal.kelas)
+  jam_jadwal: JamJadwal[];
 
   @OneToMany(() => User, (user) => user.kelas)
   user: User[];
