@@ -208,7 +208,6 @@ export class AbsenService extends BaseResponse {
 
     const allStudents = jamDetailJadwal.kelas.user;
     console.log('kelas id:', jamDetailJadwal.kelas.id);
-
     const groupedData = absens.reduce((acc, absen) => {
       const key = `${absen.jamDetailJadwal.id}`;
       if (!acc[key]) {
@@ -222,6 +221,7 @@ export class AbsenService extends BaseResponse {
           hasil_jurnal_kegiatan: absen.hasil_jurnal_kegiatan,
           jumlah_siswa: kelasList.siswa.length,
           jumlah_hadir: 0,
+          jumlah_belum_absen: kelasList.siswa.length,
           jumlah_sakit: 0,
           jumlah_alpha: 0,
           siswa_hadir: [],
@@ -229,7 +229,6 @@ export class AbsenService extends BaseResponse {
           siswa_alpha: [],
         };
       }
-
 
       switch (absen.status) {
         case 'Hadir':
@@ -268,7 +267,6 @@ export class AbsenService extends BaseResponse {
     }, {});
 
     if (Object.keys(groupedData).length === 0) {
-      
       const defaultData = {
         jumlah_siswa: kelasList.siswa.length,
         data_jumlah_siswa: kelasList.siswa.map((siswa) => ({
@@ -281,7 +279,6 @@ export class AbsenService extends BaseResponse {
 
       return this._success('Filtered Attendance List', [defaultData]);
     } else {
-      // Handle case when attendance records exist
       for (const key in groupedData) {
         const absenStudents = groupedData[key].siswa_hadir.concat(
           groupedData[key].siswa_izin,
@@ -303,6 +300,13 @@ export class AbsenService extends BaseResponse {
             });
           }
         });
+
+        // Update jumlah_belum_absen
+        groupedData[key].jumlah_belum_absen =
+          groupedData[key].jumlah_siswa -
+          (groupedData[key].jumlah_hadir +
+            groupedData[key].jumlah_sakit +
+            groupedData[key].jumlah_alpha);
       }
     }
 
