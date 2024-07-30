@@ -40,6 +40,6 @@ import { JamJadwalModule } from './app/jam-jadwal/jam-jadwal.module';
     JamJadwalModule,
   ],
   controllers: [AppController, UploadController],
-  providers: [AppService, UniqueValidator],
+  providers: [AppService, UniqueValidator, ],
 })
 export class AppModule {}

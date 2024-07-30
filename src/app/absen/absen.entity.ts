@@ -11,6 +11,10 @@ export enum Status {
   IZIN = 'Izin',
 }
 
+// src/absen/absen.entity.ts
+
+
+
 @Entity()
 export class Absen {
   @PrimaryGeneratedColumn()

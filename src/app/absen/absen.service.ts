@@ -43,103 +43,78 @@ export class AbsenService extends BaseResponse {
     return this._success('Test message emitted successfully', testMessage);
   }
 
-  async createAbsen(createAbsenDto: {
-    jadwal_id: number;
-    jam_jadwal: number;
-    jam_detail: number;
-  }): Promise<ResponseSuccess> {
-    const { jadwal_id, jam_jadwal, jam_detail } = createAbsenDto;
-
-    const jadwal = await this.jadwalRepository.findOne({
-      where: { id: jadwal_id },
+  async createAbsen(createAbsenDto: { jam_detail: number }): Promise<ResponseSuccess> {
+    const { jam_detail } = createAbsenDto;
+  
+    const jamDetail = await this.jamDetailJadwalRepository.findOne({
+      where: { id: jam_detail },
+      relations: ['jamJadwal', 'jamJadwal.jadwal', 'mapel', 'kelas'],
     });
+  
+    if (!jamDetail) {
+      throw new HttpException('Jam Detail Jadwal not found', HttpStatus.NOT_FOUND);
+    }
+  
+    const jamJadwal = jamDetail.jamJadwal;
+    const jadwal = jamJadwal.jadwal;
+  
     if (!jadwal) {
       throw new HttpException('Jadwal not found', HttpStatus.NOT_FOUND);
     }
-
-    const jamJadwal = await this.jamJadwalRepository.findOne({
-      where: { id: jam_jadwal, jadwal: { id: jadwal_id } },
-    });
-    if (!jamJadwal) {
-      throw new HttpException('Jam Jadwal not found', HttpStatus.NOT_FOUND);
-    }
-
-    const jamDetail = await this.jamDetailJadwalRepository.findOne({
-      where: { id: jam_detail, jamJadwal: { id: jam_jadwal } },
-      relations: ['mapel', 'kelas'],
-    });
-    if (!jamDetail) {
-      throw new HttpException(
-        'Jam Detail Jadwal not found',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
+  
     const currentTime = new Date();
     const currentDay = currentTime.getDay();
-    const days = [
-      'Minggu',
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-    ];
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const currentDayName = days[currentDay];
-
+  
     // if (currentDayName !== jadwal.hari) {
     //   throw new HttpException(
     //     'Tidak bisa absen pada hari ini karena jadwal tidak sesuai',
     //     HttpStatus.FORBIDDEN,
     //   );
     // }
-
+  
     const user = await this.userRepository.findOne({
       where: { id: this.req.user.id },
     });
+  
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-
+  
     const existingAbsen = await this.absenRepository.findOne({
       where: {
-        jadwal: { id: jadwal_id },
+        jadwal: { id: jadwal.id },
         user: { id: user.id },
-        jamJadwal: { id: jam_jadwal },
-        jamDetailJadwal: { id: jam_detail },
+        jamJadwal: { id: jamJadwal.id },
+        jamDetailJadwal: { id: jamDetail.id },
       },
     });
-
+  
     if (existingAbsen) {
-      return this._error(
-        'Anda sudah absen untuk jadwal ini',
-        HttpStatus.BAD_REQUEST,
-      );
+      return this._error('Anda sudah absen untuk jadwal ini', HttpStatus.BAD_REQUEST);
     }
-
+  
     let status = Status.HADIR;
-    const [startHours, startMinutes] = jamJadwal.jam_mulai
-      .split(':')
-      .map(Number);
+    const [startHours, startMinutes] = jamJadwal.jam_mulai.split(':').map(Number);
     const [endHours, endMinutes] = jamJadwal.jam_selesai.split(':').map(Number);
-
+  
     const scheduleStartTime = new Date(currentTime);
     scheduleStartTime.setHours(startHours, startMinutes, 0, 0);
-
+  
     const scheduleEndTime = new Date(currentTime);
     scheduleEndTime.setHours(endHours, endMinutes, 0, 0);
-
+  
     const attendanceTime = currentTime.getTime();
-
+  
     if (attendanceTime > scheduleEndTime.getTime()) {
       status = Status.ALPHA;
     } else if (attendanceTime > scheduleStartTime.getTime() + 15 * 60 * 1000) {
       status = Status.TELAT;
     }
-
+  
     const hasilJurnalKegiatan = user.role === Role.GURU ? 'belum ada' : '';
-
+  
     const absen = this.absenRepository.create({
       jadwal: { id: jadwal.id },
       user: { id: user.id },
@@ -149,18 +124,19 @@ export class AbsenService extends BaseResponse {
       status,
       hasil_jurnal_kegiatan: hasilJurnalKegiatan,
     });
-
+  
     await this.absenRepository.save(absen);
-
+  
     this.absenGateway.broadcastUpdate(absen);
-
+  
     const message = `Berhasil absen pada jam ${jamJadwal.jam_mulai} - ${jamJadwal.jam_selesai}, hari ${jadwal.hari}, kelas ${jamDetail.kelas.nama_kelas}, dan mapel ${jamDetail.mapel.nama_mapel}`;
     return this._success(message, absen);
   }
+  
 
   async listFilterKelas(jamDetailJadwalId: number): Promise<ResponseSuccess> {
     let absens;
-
+  
     if (jamDetailJadwalId) {
       absens = await this.absenRepository.find({
         where: { jamDetailJadwal: { id: jamDetailJadwalId } },
@@ -187,27 +163,27 @@ export class AbsenService extends BaseResponse {
         ],
       });
     }
-
+  
     // Get all students in the relevant class
     const jamDetailJadwal = await this.jamDetailJadwalRepository.findOne({
       where: { id: jamDetailJadwalId },
       relations: ['kelas', 'kelas.user', 'kelas.user.siswa'],
     });
-
+  
     if (!jamDetailJadwal) {
       throw new HttpException(
         'Jam Detail Jadwal not found',
         HttpStatus.NOT_FOUND,
       );
     }
-
+  
     const kelasList = await this.kelasRepository.findOne({
       where: { id: jamDetailJadwal.kelas.id },
-      relations: ['siswa', 'siswa.user', 'siswa'], // Load related siswa and their associated user
+      relations: ['siswa', 'siswa.user', 'siswa'],
     });
-
+  
     const allStudents = jamDetailJadwal.kelas.user;
-    console.log('kelas id:', jamDetailJadwal.kelas.id);
+  
     const groupedData = absens.reduce((acc, absen) => {
       const key = `${absen.jamDetailJadwal.id}`;
       if (!acc[key]) {
@@ -229,7 +205,7 @@ export class AbsenService extends BaseResponse {
           siswa_alpha: [],
         };
       }
-
+  
       switch (absen.status) {
         case 'Hadir':
           acc[key].jumlah_hadir += 1;
@@ -262,21 +238,16 @@ export class AbsenService extends BaseResponse {
           });
           break;
       }
-
+  
       return acc;
     }, {});
-
+  
     if (Object.keys(groupedData).length === 0) {
       const defaultData = {
+        message: 'Belum ada yang absen',
         jumlah_siswa: kelasList.siswa.length,
-        data_jumlah_siswa: kelasList.siswa.map((siswa) => ({
-          id: siswa.user.id,
-          nama: siswa.user.nama,
-          email: siswa.user.email,
-          role: siswa.user.role,
-        })),
       };
-
+  
       return this._success('Filtered Attendance List', [defaultData]);
     } else {
       for (const key in groupedData) {
@@ -287,7 +258,7 @@ export class AbsenService extends BaseResponse {
         const absenStudentIds = new Set(
           absenStudents.map((student) => student.id),
         );
-
+  
         allStudents.forEach((student) => {
           if (!absenStudentIds.has(student.id)) {
             groupedData[key].jumlah_alpha += 1;
@@ -300,7 +271,7 @@ export class AbsenService extends BaseResponse {
             });
           }
         });
-
+  
         // Update jumlah_belum_absen
         groupedData[key].jumlah_belum_absen =
           groupedData[key].jumlah_siswa -
@@ -309,11 +280,12 @@ export class AbsenService extends BaseResponse {
             groupedData[key].jumlah_alpha);
       }
     }
-
+  
     const data = Object.values(groupedData);
-
+  
     return this._success('Filtered Attendance List', data);
   }
+  
 
   async list(): Promise<ResponseSuccess> {
     const absens = await this.absenRepository.find({

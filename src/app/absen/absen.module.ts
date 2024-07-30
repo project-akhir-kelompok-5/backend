@@ -11,9 +11,17 @@ import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 import { Kelas } from '../kelas/kelas.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Absen, Jadwal, User, JamJadwal, JamDetailJadwal, Kelas])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Absen,
+      Jadwal,
+      User,
+      JamJadwal,
+      JamDetailJadwal,
+      Kelas,
+    ]),
+  ],
   controllers: [AbsenController],
-  providers: [AbsenService, AbsenGateway, Number],
-  exports:[Number]
+  providers: [AbsenService, AbsenGateway],
 })
 export class AbsenModule {}
