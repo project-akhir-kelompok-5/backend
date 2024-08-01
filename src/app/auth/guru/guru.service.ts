@@ -126,6 +126,25 @@ export class GuruService extends BaseResponse {
     return this._success('List of teachers retrieved successfully', guruList);
   }
 
+  async getGuruListWithSubject(): Promise<ResponseSuccess> {
+    const guruList = await this.guruRepository.find({
+      relations: ['user', 'mapel'],
+      select: {
+        user: {
+          nama: true,
+          
+        },
+        mapel: {
+          nama_mapel: true,
+          subject_code: true,
+          status_mapel: true
+        }
+      }
+    });
+
+    return this._success('List of teachers retrieved successfully', guruList);
+  }
+
   async getGuruProfile(): Promise<ResponseSuccess> {
     const guru = await this.guruRepository.findOne({
       where: { user: { id: this.req.user.id } },

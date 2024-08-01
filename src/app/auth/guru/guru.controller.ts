@@ -36,6 +36,11 @@ export class GuruController {
     return this.guruService.getGuruList();
   }
 
+  @Get('list-subject')
+  async getGuruListSubject(): Promise<ResponseSuccess> {
+    return this.guruService.getGuruListWithSubject();
+  }
+
   @Get('profile')
   async profile(): Promise<ResponseSuccess> {
     return this.guruService.getGuruProfile();

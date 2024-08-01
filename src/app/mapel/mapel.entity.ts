@@ -4,6 +4,9 @@ import { Jadwal } from '../jadwal/jadwal.entity';
 import { User } from '../auth/auth.entity';
 import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
 import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { StatusMapel } from '../auth/roles.enum';
+
+
 
 @Entity()
 export class Mapel {
@@ -15,6 +18,9 @@ export class Mapel {
 
   @Column({ length: 50 })
   subject_code: string;
+
+  @Column({ type: 'enum' , enum: StatusMapel, default: StatusMapel.ONLINE})
+  status_mapel: StatusMapel;
 
   @ManyToMany(() => Guru, guru => guru.mapel)
   guru: Guru[];

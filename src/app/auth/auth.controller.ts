@@ -59,6 +59,11 @@ export class AuthController {
     return this.authService.profile(id);
   }
 
+  @Get('profile-check/:id')
+  async profileCheck(@Param('id') id: any) {
+    return this.authService.profileCheck(id);
+  }
+
   @UseGuards(JwtGuardRefreshToken)
   @Get('refresh-token')
   async refreshToken(@Req() req) {

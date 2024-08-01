@@ -132,7 +132,7 @@ export class AuthService extends BaseResponse {
       );
     }
     const token = randomBytes(32).toString('hex'); // membuat token
-    const link = `http://localhost:2009/auth/reset-password/${user.id}/${token}`; //membuat link untuk reset password
+    const link = `http://localhost:3000/reset-password/${user.id}/${token}`; //membuat link untuk reset password
     await this.mailService.sendForgotPassword({
       email: email,
       name: user.nama,
@@ -148,7 +148,10 @@ export class AuthService extends BaseResponse {
 
     await this.resetPasswordRepository.save(payload); // menyimpan token dan id ke tabel reset password
 
-    return this._success('Silahkan Cek Email');
+    return this._success('Silahkan Cek Email', {
+      token: token,
+      email: email
+    });
   }
 
   private generateJWT(
@@ -261,6 +264,16 @@ export class AuthService extends BaseResponse {
   }
 
   async profile(id: number): Promise<ResponseSuccess> {
+    const user = await this.authRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
+
+    return this._success('OK', user);
+  }
+
+  async profileCheck(id: number): Promise<ResponseSuccess> {
     const user = await this.authRepository.findOne({
       where: {
         id: id,

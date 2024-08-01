@@ -7,3 +7,8 @@ export enum Role {
   KEPALA_SEKOLAH = 'Kepala Sekolah',
   WALI_KELAS = 'Wali Kelas',
 }
+
+export enum StatusMapel {
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+}
