@@ -1,12 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, ManyToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+  ManyToMany,
+} from 'typeorm';
 import { Guru } from '../auth/guru/guru.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { User } from '../auth/auth.entity';
 import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
 import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 import { StatusMapel } from '../auth/roles.enum';
-
-
+import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
 
 @Entity()
 export class Mapel {
@@ -16,22 +23,18 @@ export class Mapel {
   @Column({ length: 50 })
   nama_mapel: string;
 
-  @Column({ length: 50 })
-  subject_code: string;
-
-  @Column({ type: 'enum' , enum: StatusMapel, default: StatusMapel.ONLINE})
+  @Column({ type: 'enum', enum: StatusMapel, default: StatusMapel.ONLINE })
   status_mapel: StatusMapel;
 
-  @ManyToMany(() => Guru, guru => guru.mapel)
+  @ManyToMany(() => Guru, (guru) => guru.mapel, {onDelete: 'CASCADE'})
   guru: Guru[];
 
-  @OneToMany(() => Jadwal, jadwal => jadwal.mapel)
-  jadwal: Jadwal[];
 
-  @OneToMany(() => JamJadwal, jadwal => jadwal.mapel)
-  jam_jadwal: JamJadwal[];
+  @OneToMany(() => SubjectCodeEntity, subjectCode => subjectCode.mapel, {onDelete: 'CASCADE'})
+  subject_code: SubjectCodeEntity[];
 
-  @OneToMany(() => JamDetailJadwal, jamJadwal => jamJadwal.kelas)
+
+  @OneToMany(() => JamDetailJadwal, (jamJadwal) => jamJadwal.kelas)
   jamDetail: JamDetailJadwal[];
 
   @ManyToOne(() => User)

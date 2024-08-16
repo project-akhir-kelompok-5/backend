@@ -1,7 +1,23 @@
 // src/app/jadwal/jadwal.controller.ts
-import { Controller, Post, Get, Body, UseGuards, Request, Query, Put, Delete, Param, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Request,
+  Query,
+  Put,
+  Delete,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { JadwalService } from './jadwal.service';
-import { CreateJadwalDto, FindAllJadwalDTO, UpdateJadwalDto } from './jadwal.dto';
+import {
+  CreateJadwalDto,
+  FindAllJadwalDTO,
+  UpdateJadwalDto,
+} from './jadwal.dto';
 import { ResponseSuccess } from 'src/interface/respone';
 import { JwtGuard } from '../auth/auth.guard';
 import { query } from 'express';
@@ -14,26 +30,45 @@ import { RolesGuard } from '../auth/roles.guard';
 export class JadwalController {
   constructor(private readonly jadwalService: JadwalService) {}
 
+  @Get('hari-ini-siswa')
+  async getCurrentJamDetailSiswa() {
+    return this.jadwalService.getCurrentJamDetailIdSiswa();
+  }
+
+  @Get('hari-ini-guru')
+  async getCurrentJamDetailGuru() {
+    return this.jadwalService.getCurrentJamDetailIdGuru();
+  }
+
   @Post('create')
   // @Roles(Role.ADMIN, Role.GURU)
-  async create(@Body() createJadwalDto: CreateJadwalDto): Promise<ResponseSuccess> {
+  async create(
+    @Body() createJadwalDto: CreateJadwalDto,
+  ): Promise<ResponseSuccess> {
     return this.jadwalService.create(createJadwalDto);
   }
 
-
   @Get('list')
   // @Roles(Role.ADMIN)
-  async findAll(): Promise<ResponseSuccess> {
-    return this.jadwalService.findAll();
+  async findAll(@Query() query: FindAllJadwalDTO): Promise<ResponseSuccess> {
+    return this.jadwalService.findAll(query);
   }
 
   @Put('update/:id')
-  async update(@Param('id') id: number, @Body() updateJadwalDto: UpdateJadwalDto): Promise<ResponseSuccess> {
-    return this.jadwalService.update(id, updateJadwalDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateJadwalDto: UpdateJadwalDto,
+  ): Promise<ResponseSuccess> {
+    return this.jadwalService.update(+id, updateJadwalDto);
+  }
+
+  @Get('detail/:id')
+  async findOne(@Param('id') id: string): Promise<ResponseSuccess> {
+    return this.jadwalService.findOne(+id);
   }
 
   @Delete('delete/:id')
-  @Roles(Role.ADMIN)
+  // @Roles(Role.ADMIN)
   async delete(@Param('id') id: number): Promise<ResponseSuccess> {
     return this.jadwalService.delete(id);
   }

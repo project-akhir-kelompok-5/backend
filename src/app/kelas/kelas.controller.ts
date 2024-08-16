@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { KelasService } from './kelas.service';
 import { ResponseSuccess } from 'src/interface/respone';
-import { CreateKelasDto } from './kelas.dto';
+import { BulkCreateKelasDto, CreateKelasDto } from './kelas.dto';
 import { InjectCreatedBy } from 'src/utils/decorator/createByDecorator';
 import { JwtGuard } from '../auth/auth.guard';
 
@@ -58,5 +58,10 @@ export class KelasController {
   @Get('detail/:id')
   async getKelasDetail(@Param('id') id: number): Promise<ResponseSuccess> {
     return this.kelasService.findOneWithStudents(id);
+  }
+
+  @Post('create/bulk')
+  async createBulk(@Body() bulkCreateKelasDto: BulkCreateKelasDto): Promise<ResponseSuccess> {
+    return this.kelasService.createBulk(bulkCreateKelasDto);
   }
 }

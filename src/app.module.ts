@@ -18,7 +18,17 @@ import { JadwalModule } from './app/jadwal/jadwal.module';
 import { AbsenModule } from './app/absen/absen.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './app/auth/roles.guard';
-import { JamJadwalModule } from './app/jam-jadwal/jam-jadwal.module';
+// import { JamJadwalModule } from './app/jam-jadwal/jam-jadwal.module';
+import { SubjectCodeModule } from './app/subject_code/subject_code.module';
+import { HariModule } from './app/hari/hari.module';
+import { DownloadModule } from './app/download/download.module';
+import { TestSocketModule } from './app/test-socket/test-socket.module';
+import { NotifikasiModule } from './app/notifikasi/notifikasi.module';
+import { RekapAbsenModule } from './app/rekap-absen/rekap-absen.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AbsenService } from './app/absen/absen.service';
+import { AbsenGuru } from './app/absen/absen-guru/absen-guru.entity';
+import { JamDetailJadwal } from './app/jam-jadwal/jam-detail-jadwal.entity';
 
 @Module({
   imports: [
@@ -29,6 +39,11 @@ import { JamJadwalModule } from './app/jam-jadwal/jam-jadwal.module';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot(typeOrmConfig),
+    TypeOrmModule.forFeature([
+      AbsenGuru,
+      JamDetailJadwal,
+    ]),
+    ScheduleModule.forRoot(), 
     AuthModule,
     MailModule,
     QueryBuilderModule,
@@ -37,9 +52,14 @@ import { JamJadwalModule } from './app/jam-jadwal/jam-jadwal.module';
     MapelModule,
     JadwalModule,
     AbsenModule,
-    JamJadwalModule,
+    SubjectCodeModule,
+    HariModule,
+    DownloadModule,
+    TestSocketModule,
+    NotifikasiModule,
+    RekapAbsenModule,
   ],
   controllers: [AppController, UploadController],
-  providers: [AppService, UniqueValidator, ],
+  providers: [AppService, UniqueValidator],
 })
 export class AppModule {}

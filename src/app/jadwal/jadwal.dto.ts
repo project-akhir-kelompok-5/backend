@@ -11,21 +11,28 @@ import {
   ValidateNested,
   IsArray,
   IsNotEmpty,
+  IsBoolean,
 } from 'class-validator';
 import { PageRequestDto } from 'src/utils/dto/page.dto';
 import { HariEnum } from './jadwal.entity';
 
 class JamDetailDto {
-  @IsNotEmpty()
+  @IsOptional()
+  id?: number;
+
+  @IsOptional()
   @IsNumber()
-  mapel: number;
+  kelas?: number;
 
   @IsNotEmpty()
-  @IsNumber()
-  kelas: number;
+  // @IsNumber()
+  subject_code: any; 
 }
 
 class JamJadwalDto {
+  @IsOptional()
+  id?: number; 
+
   @IsNotEmpty()
   @IsString()
   jam_mulai: string;
@@ -33,6 +40,10 @@ class JamJadwalDto {
   @IsNotEmpty()
   @IsString()
   jam_selesai: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_rest: boolean;
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -42,8 +53,8 @@ class JamJadwalDto {
 
 export class CreateJadwalDto {
   @IsNotEmpty()
-  @IsEnum(HariEnum)
-  hari: HariEnum;
+  @IsInt()
+  hari_id: number;
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -52,10 +63,10 @@ export class CreateJadwalDto {
 }
 
 export class UpdateJadwalDto {
-  @IsEnum(HariEnum)
-  @IsOptional()
-  hari?: HariEnum;
-
+  @IsNotEmpty()
+  @IsInt()
+  hari_id: number;
+  
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => JamJadwalDto)

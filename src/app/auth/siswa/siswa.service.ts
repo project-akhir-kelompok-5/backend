@@ -7,7 +7,7 @@ import {
 import { Role } from '../roles.enum';
 import { compare, hash } from 'bcrypt'; //import hash
 import { User } from '../auth.entity';
-import { Siswa } from './siswa.entity';
+import { Murid } from './siswa.entity';
 import { Mapel } from 'src/app/mapel/mapel.entity';
 import { Kelas } from 'src/app/kelas/kelas.entity';
 import { ResponseSuccess } from 'src/interface/respone';
@@ -21,12 +21,12 @@ import { REQUEST } from '@nestjs/core';
 export class SiswaService extends BaseResponse {
   constructor(
     @InjectRepository(User) private readonly authRepository: Repository<User>,
-    @InjectRepository(Siswa)
-    private readonly siswaRepository: Repository<Siswa>,
+    @InjectRepository(Murid)
+    private readonly siswaRepository: Repository<Murid>,
     @InjectRepository(Mapel)
     private readonly mapelRepository: Repository<Mapel>,
     @InjectRepository(Kelas)
-    private readonly kelasRepository: Repository<Kelas>,
+    private readonly kelasRepository: Repository<Kelas>,  
     @Inject(REQUEST) private req: any,
   ) {
     super();
@@ -162,31 +162,26 @@ export class SiswaService extends BaseResponse {
   async getSiswaProfile(): Promise<ResponseSuccess> {
     const users = await this.authRepository.findOne({
       where: { id: this.req.user.id },
-      relations: ['siswa', 'kelas'],
+      relations: ['siswa', 'kelas']
     });
 
-    const siswa = await this.siswaRepository.findOne({
-      where: { id: users.siswa.id },
-      relations: ['user', 'kelas'],
-    });
-
-    if (!siswa) {
+    if (!users) {
       throw new HttpException('Siswa not found', HttpStatus.NOT_FOUND);
     }
 
-    const { kelas, user } = siswa;
 
     // Prepare the response
     const studentDetail = {
-      id: user.id,
-      avatar: user.avatar,
-      nama: user.nama,
-      nomor_hp: user.nomor_hp,
-      email: user.email,
-      role: user.role,
-      NISN: siswa.NISN,
-      tanggal_lahir: siswa.tanggal_lahir,
-      alamat: siswa.alamat,
+      id: users.id,
+      avatar: users.avatar,
+      nama: users.nama,
+      nomor_hp: users.nomor_hp,
+      email: users.email,
+      role: users.role,
+      NISN: users.siswa.NISN,
+      tanggal_lahir: users.siswa.tanggal_lahir,
+      alamat: users.siswa.alamat,
+      jam_detail_id: users.siswa.jamDetailJadwal_id ||null ,
     };
 
     return this._success(

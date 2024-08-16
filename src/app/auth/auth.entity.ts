@@ -6,15 +6,13 @@ import {
   OneToMany,
   ManyToOne,
 } from 'typeorm';
-import { Siswa } from './siswa/siswa.entity';
+import { Murid } from './siswa/siswa.entity';
 import { Guru } from './guru/guru.entity';
 import { Staf } from './user entity/staf.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Role } from './roles.enum';
-import { Absen } from '../absen/absen.entity';
-
-
+import { AbsenGuru } from '../absen/absen-guru/absen-guru.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -42,17 +40,17 @@ export class User extends BaseEntity {
   @Column({ type: 'enum', enum: Role })
   role: Role;
 
-  @OneToMany(() => Siswa, (siswa) => siswa.user)
-  siswa: Siswa
+  @OneToMany(() => Murid, (siswa) => siswa.user)
+  siswa: Murid;
 
   @OneToMany(() => Guru, (guru) => guru.user)
-  guru: Guru
+  guru: Guru;
 
   @OneToMany(() => Staf, (staf) => staf.user)
-  staf: Staf
+  staf: Staf;
 
   @ManyToOne(() => Kelas, (kelas) => kelas.user, { nullable: true })
-  kelas: Kelas; 
+  kelas: Kelas;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
@@ -61,17 +59,17 @@ export class User extends BaseEntity {
   updated_at: Date;
 
   @OneToMany(() => Kelas, (user) => user.created_by)
-  kelas_created_by: Kelas[]
+  kelas_created_by: Kelas[];
 
   @OneToMany(() => Kelas, (user) => user.updated_by)
-  kelas_updated_by: Kelas[]
+  kelas_updated_by: Kelas[];
 
   @OneToMany(() => Mapel, (user) => user.created_by)
-  mapel_created_by: Mapel[]
+  mapel_created_by: Mapel[];
 
   @OneToMany(() => Mapel, (user) => user.updated_by)
-  mapel_updated_by: Mapel[]
+  mapel_updated_by: Mapel[];
 
-  @OneToMany(() => Absen, absen => absen.user)
-  absen: Absen[];
+  @OneToMany(() => AbsenGuru, (absen) => absen.guru)
+  absen_guru: AbsenGuru[];
 }

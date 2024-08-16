@@ -7,12 +7,15 @@ import {
   JoinColumn,
   PrimaryColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { User } from '../auth.entity';
 import { Kelas } from 'src/app/kelas/kelas.entity';
+import { AbsenSiswa } from 'src/app/absen/absen-siswa/absen-siswa.entity';
+import { JamDetailJadwal } from 'src/app/jam-jadwal/jam-detail-jadwal.entity';
 
 @Entity()
-export class Siswa {
+export class Murid {
   @PrimaryColumn()
   id: number;
 
@@ -23,6 +26,9 @@ export class Siswa {
   @ManyToOne(() => Kelas, (kelas) => kelas.siswa, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'kelasId' })
   kelas: Kelas;
+
+  @Column({ nullable: true})
+  jamDetailJadwal_id: number;
 
   @Column()
   NISN: string;

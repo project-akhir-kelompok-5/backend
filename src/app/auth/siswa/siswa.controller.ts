@@ -38,8 +38,8 @@ export class SiswaController {
     return this.siswaService.getSiswaList();
   }
 
-  @UseGuards(JwtGuard) // impelementasi guard pada route , hal ini berarti endpoint profile hanya bisa diakses jika client membawa token
-  @Get('profile')
+  @UseGuards(JwtGuard)
+  @Get('profil')
   async profile() {  // hasil validate dari jwt strategy akan ditambakan pada req.user. isi object req.user akan sama dengan payload dari jwt token. Silahkan coba console.log(req.user)
     return this.siswaService.getSiswaProfile();
   }

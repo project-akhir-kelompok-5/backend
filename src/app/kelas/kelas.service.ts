@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { Kelas } from './kelas.entity';
 import BaseResponse from 'src/utils/response/base.response';
 import { ResponseSuccess } from 'src/interface/respone';
-import { CreateKelasDto } from './kelas.dto';
+import { BulkCreateKelasDto, CreateKelasDto } from './kelas.dto';
 import { REQUEST } from '@nestjs/core';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class KelasService extends BaseResponse {
     private readonly kelasRepository: Repository<Kelas>,
     @Inject(REQUEST) private req: any,
   ) {
-    super();
+    super()
   }
 
   async create(createKelasDto: CreateKelasDto): Promise<ResponseSuccess> {
@@ -43,7 +43,7 @@ export class KelasService extends BaseResponse {
 
   async findAll(): Promise<ResponseSuccess> {
     const kelasList = await this.kelasRepository.find({
-      relations: ['siswa', 'siswa.user', 'siswa'], // Load related siswa and their associated user
+      relations: ['siswa', 'siswa.user.kelas', 'siswa'], // Load related siswa and their associated user
     });
 
     // Structure the response to include user with nested siswa
@@ -57,6 +57,7 @@ export class KelasService extends BaseResponse {
         nomor_hp: siswa.user.nomor_hp,
         email: siswa.user.email,
         role: siswa.user.role,
+        kelas: siswa.kelas,
         siswa: {
           id: siswa.id,
           NISN: siswa.NISN,
@@ -123,6 +124,44 @@ export class KelasService extends BaseResponse {
     }
 
     return this._success('Kelas deleted successfully');
+  }
+
+  async createBulk(bulkCreateKelasDto: BulkCreateKelasDto): Promise<ResponseSuccess> {
+    const { data } = bulkCreateKelasDto;
+
+    const errors = [];
+    const successes = [];
+
+    for (const createKelasDto of data) {
+      const { nama_kelas } = createKelasDto;
+
+      // Check if mata pelajaran already exists
+      const existingKelas = await this.kelasRepository.findOne({
+        where: { nama_kelas },
+      });
+      if (existingKelas) {
+        errors.push(`Class "${nama_kelas}" already exists`);
+        continue;
+      }
+
+      try {
+        const hasil = await this.kelasRepository.save({
+          ...createKelasDto,
+          created_by: {
+            id: this.req.user.id,
+          },
+        });
+        successes.push(hasil);
+      } catch (error) {
+        errors.push(`Error creating class "${nama_kelas}": ${error.message}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      return this._success('Bulk create completed with errors', { successes, errors });
+    }
+
+    return this._success('Bulk create completed successfully', successes);
   }
 
   async deleteBulk(ids: number[]): Promise<ResponseSuccess> {

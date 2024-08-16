@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsInt, IsNumber, IsArray } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsInt, IsNumber, IsArray, Max, Min, Length, ArrayNotEmpty } from 'class-validator';
 export class RegisterGuruDto {
   @IsNotEmpty()
   @IsString()
@@ -12,10 +12,9 @@ export class RegisterGuruDto {
   @IsString()
   password: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  jurnal_kegiatan?: string;
-
+  initial_schedule: string;
 
   @IsNotEmpty()
   mapel: any;
@@ -30,6 +29,15 @@ export class UpdateGuruDto {
   @IsString()
   nomor_hp?: string;
 
+  @IsOptional()
+  @IsString()
+  nama?: string;
+
+  @IsOptional()
+  @IsArray()
+  // @ArrayNotEmpty()
+  @IsInt({ each: true })
+  mapel?: number[];
 }
 
 export class DeleteBulkGuruDto {

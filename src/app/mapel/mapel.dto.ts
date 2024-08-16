@@ -1,14 +1,15 @@
 // src/app/mapel/dto/create-mapel.dto.ts
-import { IsString, IsNotEmpty, Length, IsOptional, IsObject } from 'class-validator';
+import { IsString, IsNotEmpty, Length, IsOptional, IsObject, IsEnum } from 'class-validator';
+import { StatusMapel } from '../auth/roles.enum';
 
 export class CreateMapelDto {
   @IsString()
   @IsNotEmpty()
   nama_mapel: string;
 
-  @IsString()
+  @IsEnum(StatusMapel)
   @IsNotEmpty()
-  subject_code: string;
+  status_mapel: StatusMapel;
   
   @IsObject()
   @IsOptional()
@@ -20,9 +21,9 @@ export class UpdateMapelDto {
   @IsNotEmpty()
   nama_mapel: string;
 
-  @IsString()
+  @IsEnum(StatusMapel)
   @IsNotEmpty()
-  subject_code: string;
+  status_mapel: StatusMapel;
   
   @IsObject()
   @IsOptional()

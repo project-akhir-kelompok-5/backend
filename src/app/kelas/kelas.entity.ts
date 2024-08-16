@@ -1,34 +1,45 @@
 // kelas.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Guru } from '../auth/guru/guru.entity';
-import { Siswa } from '../auth/siswa/siswa.entity';
+import { Murid } from '../auth/siswa/siswa.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/auth.guard';
 import { User } from '../auth/auth.entity';
 import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
 import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { KelasEnum } from '../auth/roles.enum';
+import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
 
-UseGuards(JwtGuard)
+UseGuards(JwtGuard);
 @Entity()
 export class Kelas {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 50 })
+  @Column()
   nama_kelas: string;
 
-  @OneToMany(() => JamDetailJadwal, jamJadwal => jamJadwal.kelas)
+  @Column()
+  kode: string;
+
+  @OneToMany(() => JamDetailJadwal, (jamJadwal) => jamJadwal.kelas, {
+    onDelete: 'CASCADE',
+  })
   jamDetail: JamDetailJadwal[];
 
-  @OneToMany(() => Siswa, siswa => siswa.kelas)
-  siswa: Siswa[];
+  @OneToMany(() => Murid, (siswa) => siswa.kelas)
+  siswa: Murid[];
 
-  @OneToMany(() => Jadwal, jadwal => jadwal.kelas)
+  @OneToMany(() => Jadwal, (jadwal) => jadwal.kelas)
   jadwal: Jadwal[];
-
-  @OneToMany(() => JamJadwal, jadwal => jadwal.kelas)
-  jam_jadwal: JamJadwal[];
 
   @OneToMany(() => User, (user) => user.kelas)
   user: User[];

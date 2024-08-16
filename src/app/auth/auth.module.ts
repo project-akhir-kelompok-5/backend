@@ -11,20 +11,21 @@ import { ResetPassword } from './reset_password.entity';
 import { Guru } from './guru/guru.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
-import { Siswa } from './siswa/siswa.entity';
+import { Murid } from './siswa/siswa.entity';
 import { SiswaController } from './siswa/siswa.controller';
 import { SiswaService } from './siswa/siswa.service';
 import { GuruService } from './guru/guru.service';
 import { GuruController } from './guru/guru.controller';
+import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, ResetPassword, Guru, Mapel, Kelas, Siswa]),
+    TypeOrmModule.forFeature([User, ResetPassword, Guru, Mapel, Kelas, Murid, SubjectCodeEntity]),
     JwtModule.register({
-      // global: true,
-      // signOptions: {
-      //   algorithm: 'HS256',
-      // },
+      global: true,
+      signOptions: {
+        algorithm: 'HS256',
+      },
     }),
     MailModule,
   ],

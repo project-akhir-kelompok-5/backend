@@ -3,7 +3,7 @@ import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mapel } from './mapel.entity';
-import { CreateMapelDto } from './mapel.dto';
+import { CreateMapelDto, UpdateMapelDto } from './mapel.dto';
 import { ResponseSuccess } from 'src/interface/respone';
 import BaseResponse from 'src/utils/response/base.response';
 import { REQUEST } from '@nestjs/core';
@@ -25,6 +25,7 @@ export class MapelService extends BaseResponse {
     const existingMapel = await this.mapelRepository.findOne({
       where: { nama_mapel },
     });
+
     if (existingMapel) {
       throw new HttpException(
         'Mata Pelajaran already exists',
@@ -34,12 +35,11 @@ export class MapelService extends BaseResponse {
 
     // Create and save new mata pelajaran
     const mapel = this.mapelRepository.create({
-        ...createMapelDto,
-    
-        created_by: {
-            id: this.req.user.id,
-            nama: this.req.user.nama
-        }
+      ...createMapelDto,
+      created_by: {
+        id: this.req.user.id,
+        nama: this.req.user.nama,
+      },
     });
     const hasil = await this.mapelRepository.save(mapel);
 
@@ -51,20 +51,22 @@ export class MapelService extends BaseResponse {
     return this._success('List of Mata Pelajaran', mapels);
   }
 
-  async update(id: number, updateMapelDto: CreateMapelDto): Promise<ResponseSuccess> {
-    const { nama_mapel } = updateMapelDto;
-
-    const mapel = await this.mapelRepository.findOne({
+  async update(id: number, payload: UpdateMapelDto): Promise<ResponseSuccess> {
+    const check = await this.mapelRepository.findOne({
       where: { id },
     });
 
-    if (!mapel) {
+    if (!check) {
       throw new HttpException('Mata Pelajaran not found', HttpStatus.NOT_FOUND);
     }
 
-    // Update mata pelajaran
-    mapel.nama_mapel = nama_mapel;
-    const hasil = await this.mapelRepository.save(mapel);
+    const hasil = await this.mapelRepository.save({
+      ...payload,
+      id: id,
+      updated_by: {
+        id: this.req.user.id,
+      },
+    });
 
     return this._success('Update successful', hasil);
   }
@@ -98,6 +100,8 @@ export class MapelService extends BaseResponse {
       }),
     );
 
-    return this._success(`Bulk delete completed. Berhasil: ${berhasil}, Gagal: ${gagal}`);
+    return this._success(
+      `Bulk delete completed. Berhasil: ${berhasil}, Gagal: ${gagal}`,
+    );
   }
 }

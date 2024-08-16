@@ -12,3 +12,12 @@ export enum StatusMapel {
   ONLINE = 'online',
   OFFLINE = 'offline',
 }
+
+export enum KelasEnum {
+  X_RPL = 'X RPL',
+  X_TKJ = 'X TKJ',
+  XI_RPL = 'XI RPL',
+  XI_TKJ = 'XI TKJ',
+  XII_RPL = 'XII RPL',
+  XII_TKJ = 'XII TKJ',
+}

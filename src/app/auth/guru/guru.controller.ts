@@ -1,7 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { GuruService } from './guru.service';
 import { RegisterGuruDto, UpdateGuruDto } from './guru.dto';
 import { ResponseSuccess } from 'src/interface/respone';
+import { JwtGuard } from '../auth.guard';
 
 @Controller('guru')
 export class GuruController {
@@ -24,13 +36,20 @@ export class GuruController {
     return this.guruService.updateGuru(id, updateGuruDto);
   }
 
-//   // Endpoint to delete a teacher
+  @Get('detail/:id')
+  async getGuruDetailWithSubject(
+    @Param('id') id: string,
+  ): Promise<ResponseSuccess> {
+    return this.guruService.getGuruDetailWithSubject(+id);
+  }
+
+  //   // Endpoint to delete a teacher
   @Delete('delete/:id')
   async deleteGuru(@Param('id') id: number): Promise<ResponseSuccess> {
     return this.guruService.deleteGuru(id);
   }
 
-//   // Endpoint to get a list of all teachers
+  //   // Endpoint to get a list of all teachers
   @Get('list')
   async getGuruList(): Promise<ResponseSuccess> {
     return this.guruService.getGuruList();
@@ -41,9 +60,9 @@ export class GuruController {
     return this.guruService.getGuruListWithSubject();
   }
 
+  @UseGuards(JwtGuard)
   @Get('profile')
   async profile(): Promise<ResponseSuccess> {
     return this.guruService.getGuruProfile();
   }
-
 }

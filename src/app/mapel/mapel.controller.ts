@@ -1,7 +1,7 @@
 // src/app/mapel/mapel.controller.ts
 import { Controller, Post, Body, Get, Param, Put, Delete, Query, UseGuards } from '@nestjs/common';
 import { MapelService } from './mapel.service';
-import { CreateMapelDto } from './mapel.dto';
+import { CreateMapelDto, UpdateMapelDto } from './mapel.dto';
 import { ResponseSuccess } from 'src/interface/respone';
 import { JwtGuard } from '../auth/auth.guard';
 import { InjectCreatedBy } from 'src/utils/decorator/createByDecorator';
@@ -24,7 +24,7 @@ export class MapelController {
   @Put('update/:id')
   async update(
     @Param('id') id: number,
-    @Body() updateMapelDto: CreateMapelDto,
+    @Body() updateMapelDto: UpdateMapelDto,
   ): Promise<ResponseSuccess> {
     return this.mapelService.update(id, updateMapelDto);
   }

@@ -28,7 +28,7 @@ import { RegisterGuruDto } from './guru/guru.dto';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { RegisterSiswaDto } from './siswa/siswa.dto';
-import { Siswa } from './siswa/siswa.entity';
+import { Murid } from './siswa/siswa.entity';
 import { Role } from './roles.enum';
 
 @Injectable()
@@ -36,7 +36,7 @@ export class AuthService extends BaseResponse {
   constructor(
     @InjectRepository(User) private readonly authRepository: Repository<User>,
     @InjectRepository(Guru) private readonly guruRepository: Repository<Guru>,
-    @InjectRepository(Siswa) private readonly siswaRepository: Repository<Siswa>,
+    @InjectRepository(Murid) private readonly siswaRepository: Repository<Murid>,
     @InjectRepository(Mapel)
     private readonly mapelRepository: Repository<Mapel>,
     @InjectRepository(Kelas)

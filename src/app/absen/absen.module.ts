@@ -2,26 +2,46 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AbsenController } from './absen.controller';
 import { AbsenService } from './absen.service';
-import { Absen } from './absen.entity';
+import { AbsenGuru } from './absen-guru/absen-guru.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { User } from '../auth/auth.entity';
-import { AbsenGateway } from './absen.gateway';
 import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
 import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 import { Kelas } from '../kelas/kelas.entity';
+import { AbsenKelas } from './absen-kelas/absen-kelas.entity';
+import { AbsenSiswa } from './absen-siswa/absen-siswa.entity';
+import { Murid } from '../auth/siswa/siswa.entity';
+import { JurnalKegiatan } from './jurnal-kegiatan.entity';
+import { Guru } from '../auth/guru/guru.entity';
+import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
+import { AbsenGateway } from './absen.gateway';
+import { RekapAbsen } from '../rekap-absen/rekap-absen.entity';
+import { AbsenSiswaService } from './absen-siswa/absen-siswa.service';
+import { AbsenGuruService } from './absen-guru/absen-guru.service';
+import { AbsenSiswaController } from './absen-siswa/absen-siswa.controller';
+import { AbsenGuruController } from './absen-guru/absen-guru.controller';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([
-      Absen,
+      AbsenGuru,
+      AbsenKelas,
+      SubjectCodeEntity,
+      AbsenSiswa,
+      RekapAbsen,
+      Murid,
       Jadwal,
       User,
       JamJadwal,
+      Guru,
+      JurnalKegiatan,
       JamDetailJadwal,
       Kelas,
     ]),
   ],
-  controllers: [AbsenController],
-  providers: [AbsenService, AbsenGateway],
+  controllers: [AbsenController, AbsenSiswaController, AbsenGuruController],
+  providers: [AbsenService, AbsenGateway, AbsenSiswaService, AbsenGuruService],
 })
 export class AbsenModule {}

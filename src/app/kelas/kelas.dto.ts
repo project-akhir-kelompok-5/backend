@@ -1,10 +1,11 @@
 // src/app/kelas/create-kelas.dto.ts
-import { IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { KelasEnum } from '../auth/roles.enum';
+import { Type } from 'class-transformer';
 
 export class CreateKelasDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(50)
   nama_kelas: string;
 
   @IsObject()
@@ -15,10 +16,17 @@ export class CreateKelasDto {
 export class UpdateKelasDto {
   @IsNotEmpty()
   @IsString()
-  @MaxLength(50)
   nama_kelas: string;
 
   @IsObject()
   @IsOptional()
   updated_by: { id: number };
+}
+
+export class BulkCreateKelasDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateKelasDto)
+  @IsNotEmpty()
+  data: CreateKelasDto[];
 }

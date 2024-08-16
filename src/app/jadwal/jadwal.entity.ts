@@ -1,12 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { Guru } from '../auth/guru/guru.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { User } from '../auth/auth.entity';
-import { Absen } from '../absen/absen.entity';
+import { AbsenGuru } from '../absen/absen-guru/absen-guru.entity';
 import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
-
+import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
+import { Hari } from '../hari/hari.entity';
+import { AbsenSiswa } from '../absen/absen-siswa/absen-siswa.entity';
+import { AbsenKelas } from '../absen/absen-kelas/absen-kelas.entity';
 
 export enum HariEnum {
   Senin = 'Senin',
@@ -21,26 +31,29 @@ export class Jadwal {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Mapel, (mataPelajaran) => mataPelajaran.jadwal)
-  mapel: Mapel;
+  @OneToMany(() => AbsenGuru, (absen) => absen.jadwal)
+  absen_guru: AbsenGuru
 
-  @OneToMany(() => Absen, (absen) => absen.jadwal)
-  absen: Absen;
+  
 
-  @ManyToOne(() => Kelas, kelas => kelas.jadwal)
+  @OneToMany(() => AbsenKelas, (absen) => absen.jadwal)
+  absen_kelas: AbsenKelas
+
+  @ManyToOne(() => Kelas, (kelas) => kelas.jadwal)
   kelas: Kelas;
+
+  @ManyToOne(() => Hari, (Hari) => Hari.jadwals)
+  hari: Hari;
+
+  @ManyToOne(() => SubjectCodeEntity, (SubjectCode) => SubjectCode.jadwal)
+  subject_code: SubjectCodeEntity;
 
   @OneToMany(() => JamJadwal, (jamJadwal) => jamJadwal.jadwal, {
     onDelete: 'CASCADE',
-    cascade: ['insert', 'update']
+    cascade: ['insert', 'update'],
   })
   jam_jadwal: JamJadwal[];
 
-  @Column({
-    type: 'enum',
-    enum: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
-  })
-  hari: string;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
