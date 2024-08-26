@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { NotifikasiService } from './notifikasi.service';
+import {  PushNotificationService } from './notifikasi.service';
 
 @Module({
-  exports: [NotifikasiService],
-  providers: [NotifikasiService]
+  exports: [PushNotificationService],
+  providers: [PushNotificationService]
 })
 export class NotifikasiModule {}

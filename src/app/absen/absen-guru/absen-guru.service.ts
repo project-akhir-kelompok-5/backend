@@ -10,8 +10,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { AbsenGuru } from './absen-guru.entity';
 import { Guru } from 'src/app/auth/guru/guru.entity';
-import { JamDetailJadwal } from 'src/app/jam-jadwal/jam-detail-jadwal.entity';
-import { JamJadwal } from 'src/app/jam-jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from 'src/app/jadwal/jam-jadwal.entity';
 import { Kelas } from 'src/app/kelas/kelas.entity';
 import { Murid } from 'src/app/auth/siswa/siswa.entity';
 import { AbsenGateway } from '../absen.gateway';
@@ -21,10 +21,15 @@ import BaseResponse from 'src/utils/response/base.response';
 import { ResponseSuccess } from 'src/interface/respone';
 import {
   getMaxWeeksInMonth,
+  getMonthRange,
+  getWeekNumberInMonth,
   getWeekRange,
+  indexToMonthName,
 } from 'src/utils/helper function/getWeek';
 import { User } from 'src/app/auth/auth.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { calculateDistance } from 'src/utils/validator/location.validator';
+import { GeoLocation } from 'src/app/geo-location/geo-location.entity';
 
 @Injectable()
 export class AbsenGuruService extends BaseResponse {
@@ -44,6 +49,8 @@ export class AbsenGuruService extends BaseResponse {
     private readonly kelasRepository: Repository<Kelas>,
     @InjectRepository(Murid)
     private readonly siswaRepository: Repository<Murid>,
+    @InjectRepository(GeoLocation)
+    private readonly geoRepository: Repository<GeoLocation>,
     @Inject(REQUEST) private req: any,
     private readonly absenGateway: AbsenGateway,
   ) {
@@ -53,7 +60,31 @@ export class AbsenGuruService extends BaseResponse {
   async AbsenGuru(
     createAbsenDto: CreateAbsenGuruDto,
   ): Promise<ResponseSuccess> {
-    const { jam_detail } = createAbsenDto;
+    const {
+      jam_detail,
+      latitude: currentLatitude,
+      longitude: currentLongitude,
+    } = createAbsenDto;
+
+    const defaultLokasi = await this.geoRepository.findOne({
+      where: {
+        id: 0,
+      },
+    });
+
+    const defaultLatitude = defaultLokasi.latitude;
+    const defaultLongitude = defaultLokasi.longitude;
+    console.log('default lati', defaultLatitude);
+    const distance = calculateDistance(
+      currentLatitude,
+      currentLongitude,
+      defaultLatitude,
+      defaultLongitude,
+    );
+
+    // if (distance > 50) { // Misalkan 50 meter adalah batas jarak yang valid
+    //   throw new HttpException('Anda tidak berada di lokasi yang tepat', HttpStatus.FORBIDDEN);
+    // }
 
     const guru = await this.guruRepository.findOne({
       where: { id: this.req.user.id },
@@ -121,12 +152,14 @@ export class AbsenGuruService extends BaseResponse {
     const absen = new AbsenGuru();
     absen.guru = guru;
     absen.jamDetailJadwal = jamDetailJadwal;
-    absen.jadwal = jamJadwal.jadwal;
-    absen.jamJadwal = jamJadwal;
     absen.status = status;
     absen.waktu_absen = currentTime;
 
     await this.absenGuruRepository.save(absen);
+
+    await this.guruRepository.update(this.req.user.id, {
+      is_absen_today: true,
+    });
     // this.absenGateway.server.emit('absenGuru', absen);
 
     const students = await this.siswaRepository.find({
@@ -144,10 +177,10 @@ export class AbsenGuruService extends BaseResponse {
     return this._success('Guru absen successfully', absen.id);
   }
 
-  async getWeeklySummary(
-    month: string,
-    week: number,
-    mapel: string,
+  async getRekapGuru(
+    month?: string,
+    week?: number,
+    mapel?: string,
   ): Promise<ResponseSuccess> {
     const user = await this.userRepository.findOne({
       where: { id: this.req.user.id },
@@ -157,8 +190,21 @@ export class AbsenGuruService extends BaseResponse {
       throw new HttpException('Guru not found', HttpStatus.NOT_FOUND);
     }
 
-    // Validate the week number
-    const [startOfWeek, endOfWeek] = getWeekRange(month, week);
+    const currentDate = new Date();
+
+    // If month is not provided, use the current month
+    if (!month) {
+      month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    } else {
+      month = month.padStart(2, '0'); // Ensure it's in 'MM' format
+    }
+
+    // If week is not provided, calculate the current week of the month
+    if (!week) {
+      week = getWeekNumberInMonth(currentDate);
+    }
+
+    const [startOfMonth, endOfMonth] = getMonthRange(month);
     const maxWeeks = getMaxWeeksInMonth(month);
 
     if (week > maxWeeks) {
@@ -168,21 +214,31 @@ export class AbsenGuruService extends BaseResponse {
       );
     }
 
-    console.log('Date Range:', startOfWeek, endOfWeek);
+    const startOfWeek = week ? getWeekRange(month, week)[0] : startOfMonth;
+    const endOfWeek = week ? getWeekRange(month, week)[1] : endOfMonth;
 
-    // Filter absensi berdasarkan jamDetailJadwalId jika disediakan
-    const absensi = await this.absenGuruRepository.find({
-      where: {
-        guru: { id: user.id },
-        waktu_absen: Between(startOfWeek, endOfWeek),
-        jamDetailJadwal: {
-          subject_code: {
-            mapel: {
-              nama_mapel: mapel,
-            },
+    console.log('Parameters:', { month, week });
+    console.log('Date Range:', { startOfWeek, endOfWeek });
+
+    // Build query conditions
+    const whereConditions: any = {
+      guru: { id: user.id },
+      waktu_absen: Between(startOfWeek, endOfWeek),
+    };
+
+    if (mapel) {
+      whereConditions.jamDetailJadwal = {
+        subject_code: {
+          mapel: {
+            nama_mapel: mapel,
           },
         },
-      },
+      };
+    }
+
+    const absensi = await this.absenGuruRepository.find({
+      where: whereConditions,
+      relations: ['jamDetailJadwal', 'jamDetailJadwal.subject_code'],
     });
 
     console.log('Attendance Records:', absensi);
@@ -207,17 +263,17 @@ export class AbsenGuruService extends BaseResponse {
       subject_code: `${guru.initial_schedule}${index + 1}`,
     }));
 
+    const monthName = indexToMonthName[parseInt(month, 10) - 1]; // Get month name from index
+
     const result = {
       id: user.id,
       nama: user.nama,
-      month,
-      week,
+      month: monthName,
+      week: week,
       list_mapel: formattedMapelList,
       data: counts,
     };
 
     return this._success('Weekly summary fetched successfully', result);
   }
-
-  
 }

@@ -9,7 +9,7 @@ import {
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { JamDetailJadwal } from './jam-detail-jadwal.entity';
-import { Jadwal } from '../jadwal/jadwal.entity';
+import { Jadwal } from './jadwal.entity';
 import { AbsenGuru } from '../absen/absen-guru/absen-guru.entity';
 import { AbsenSiswa } from '../absen/absen-siswa/absen-siswa.entity';
 import { AbsenKelas } from '../absen/absen-kelas/absen-kelas.entity';
@@ -37,6 +37,9 @@ export class JamJadwal {
 
   @Column()
   jam_mulai: string;
+
+  @Column({ type: 'boolean', default: false })
+  allSchedulesDone: boolean;
 
   @Column()
   jam_selesai: string;

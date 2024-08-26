@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '../auth/auth.entity';
 import { Guru } from '../auth/guru/guru.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamDetailJadwal } from '../jadwal/jam-detail-jadwal.entity';
 import { AbsenKelas } from '../absen/absen-kelas/absen-kelas.entity';
 import { Murid } from '../auth/siswa/siswa.entity';
 // import { AbsenKelas } from './absen-kelas.entity';

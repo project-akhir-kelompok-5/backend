@@ -10,8 +10,8 @@ import {
 import { Guru } from '../auth/guru/guru.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { User } from '../auth/auth.entity';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from '../jadwal/jam-detail-jadwal.entity';
 import { StatusMapel } from '../auth/roles.enum';
 import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
 

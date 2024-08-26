@@ -14,8 +14,8 @@ import { Kelas } from '../kelas/kelas.entity';
 import BaseResponse from 'src/utils/response/base.response';
 import { ResponseSuccess } from 'src/interface/respone';
 import { REQUEST } from '@nestjs/core';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from './jam-jadwal.entity';
+import { JamDetailJadwal } from './jam-detail-jadwal.entity';
 import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
 import { User } from '../auth/auth.entity';
 import { Murid } from '../auth/siswa/siswa.entity';
@@ -60,6 +60,119 @@ export class JadwalService extends BaseResponse {
     super();
   }
 
+  async getCurrentJamDetailUser(): Promise<ResponseSuccess> {
+    const todayDayName = getTodayDayNames();
+    const jadwalList = await this.jadwalRepository.find({
+      where: {
+        hari: {
+          nama_hari: todayDayName,
+        },
+      },
+      relations: [
+        'hari',
+        'jam_jadwal',
+        'jam_jadwal.jam_detail',
+        'jam_jadwal.jam_detail.kelas',
+        'jam_jadwal.jam_detail.subject_code.mapel',
+        'jam_jadwal.jam_detail.subject_code.guru',
+      ],
+    });
+
+    const user = await this.findUserByRole(this.req.user.id);
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    const currentTime = new Date();
+    const currentDate = currentTime.toISOString().split('T')[0];
+
+    const todaysSchedules = jadwalList
+      .flatMap((jadwal) =>
+        jadwal.jam_jadwal.map((jamJadwal) => ({
+          jamJadwal,
+          jamDetail: this.findJamDetail(jamJadwal.jam_detail, user),
+        })),
+      )
+      .filter((item) => item.jamDetail);
+
+    todaysSchedules.sort((a, b) => {
+      const jamMulaiA = new Date(`${currentDate}T${a.jamJadwal.jam_mulai}`);
+      const jamMulaiB = new Date(`${currentDate}T${b.jamJadwal.jam_mulai}`);
+      return jamMulaiA.getTime() - jamMulaiB.getTime();
+    });
+
+    const allSchedulesDone = this.checkIfAllSchedulesDone(
+      todaysSchedules,
+      currentTime,
+      currentDate,
+    );
+
+    for (const schedule of todaysSchedules) {
+      const jamMulai = new Date(
+        `${currentDate}T${schedule.jamJadwal.jam_mulai}`,
+      );
+      const jamSelesai = new Date(
+        `${currentDate}T${schedule.jamJadwal.jam_selesai}`,
+      );
+
+      if (currentTime >= jamMulai && currentTime <= jamSelesai) {
+        const { isAbsen, isMasukKelas } = await this.getAbsenStatus(
+          schedule,
+          user,
+        );
+
+        return this._success('Jam detail found successfully', {
+          id_user: user.user.id,
+          nama_user: user.user.nama,
+          role: user.user.role,
+          jamDetailId: schedule.jamDetail.id,
+          jam_mulai: schedule.jamJadwal.jam_mulai,
+          jam_selesai: schedule.jamJadwal.jam_selesai,
+          mapel: schedule.jamDetail.subject_code.mapel.nama_mapel,
+          kelas: schedule.jamDetail.kelas.nama_kelas,
+          is_absen: isAbsen,
+          is_masuk_kelas: isMasukKelas,
+          is_mulai: true,
+          is_jadwal_habis: false,
+          is_jadwal_habis_hari_ini: allSchedulesDone,
+        });
+      }
+    }
+
+    if (todaysSchedules.length > 0) {
+      const nextSchedule = todaysSchedules[0];
+      const isJadwalHabis =
+        allSchedulesDone ||
+        currentTime >=
+          new Date(`${currentDate}T${nextSchedule.jamJadwal.jam_selesai}`);
+      const isMulai =
+        !isJadwalHabis &&
+        currentTime >=
+          new Date(`${currentDate}T${nextSchedule.jamJadwal.jam_mulai}`);
+
+      return this._success('Jam detail found successfully', {
+        id_user: user.user.id,
+        nama_user: user.user.nama,
+        role: user.user.role,
+        jamDetailId: nextSchedule.jamDetail.id,
+        jam_mulai: nextSchedule.jamJadwal.jam_mulai,
+        jam_selesai: nextSchedule.jamJadwal.jam_selesai,
+        mapel: nextSchedule.jamDetail.subject_code.mapel.nama_mapel,
+        kelas: nextSchedule.jamDetail.kelas.nama_kelas,
+        is_absen: false,
+        is_masuk_kelas: false,
+        is_mulai: isMulai,
+        is_jadwal_habis: isJadwalHabis,
+        is_jadwal_habis_hari_ini: allSchedulesDone,
+      });
+    }
+
+    throw new HttpException(
+      'Jam detail not found for today',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
   async getCurrentJamDetailIdSiswa(): Promise<ResponseSuccess> {
     const todayDayName = getTodayDayNames();
     const jadwalList = await this.jadwalRepository.find({
@@ -83,7 +196,7 @@ export class JadwalService extends BaseResponse {
       where: {
         id: this.req.user.id,
       },
-      relations: ['kelas'],
+      relations: ['kelas', 'user'],
     });
 
     if (!siswa) {
@@ -98,23 +211,25 @@ export class JadwalService extends BaseResponse {
     // Mengumpulkan semua jadwal hari ini
     const todaysSchedules = jadwalList
       .flatMap((jadwal) =>
-        jadwal.jam_jadwal.map((jamJadwal) => ({
-          jamJadwal,
-          jamDetail: jamJadwal.jam_detail.find(
-            (detail) => detail.kelas.id === siswa.kelas.id,
-          ),
-        })),
+        jadwal.jam_jadwal
+          .map((jamJadwal) => ({
+            jamJadwal,
+            jamDetail: jamJadwal.jam_detail.find(
+              (detail) => detail.kelas.id === siswa.kelas.id,
+            ),
+          }))
+          .filter((item) => item.jamDetail),
       )
-      .filter((item) => item.jamDetail);
+      .sort((a, b) => {
+        const jamMulaiA = new Date(`${currentDate}T${a.jamJadwal.jam_mulai}`);
+        const jamMulaiB = new Date(`${currentDate}T${b.jamJadwal.jam_mulai}`);
+        return jamMulaiA.getTime() - jamMulaiB.getTime();
+      });
 
-    // Mengurutkan berdasarkan jam mulai
-    todaysSchedules.sort((a, b) => {
-      const jamMulaiA = new Date(`${currentDate}T${a.jamJadwal.jam_mulai}`);
-      const jamMulaiB = new Date(
-        `${currentDate}T${currentDate}T${b.jamJadwal.jam_mulai}`,
-      );
-      return jamMulaiA.getTime() - jamMulaiB.getTime();
-    });
+    // Mengecek apakah semua jadwal hari ini telah selesai
+    const allSchedulesDone = todaysSchedules.every(
+      (schedule) => schedule.jamJadwal.allSchedulesDone,
+    );
 
     // Memeriksa apakah ada jadwal aktif atau jadwal berikutnya
     for (const schedule of todaysSchedules) {
@@ -140,6 +255,7 @@ export class JadwalService extends BaseResponse {
 
         const isAbsen = !!absenSiswa;
         const isMasukKelas = !!absenSiswa;
+        const isMulai = !allSchedulesDone && currentTime >= jamMulai;
 
         return this._success('Jam detail found successfully', {
           nama_user: this.req.user.id,
@@ -150,28 +266,25 @@ export class JadwalService extends BaseResponse {
           kelas: schedule.jamDetail.kelas.nama_kelas,
           is_absen: isAbsen,
           is_masuk_kelas: isMasukKelas,
-          is_mulai: true, // Jadwal telah dimulai
-        });
-      } else if (currentTime < jamMulai) {
-        return this._success('Jam detail found successfully', {
-          nama_user: this.req.user.id,
-          jamDetailId: schedule.jamDetail.id,
-          jam_mulai: schedule.jamJadwal.jam_mulai,
-          jam_selesai: schedule.jamJadwal.jam_selesai,
-          mapel: schedule.jamDetail.subject_code.mapel.nama_mapel,
-          kelas: schedule.jamDetail.kelas.nama_kelas,
-          is_absen: false,
-          is_masuk_kelas: false,
-          is_mulai: false, // Jadwal belum dimulai
+          is_mulai: isMulai,
+          is_jadwal_habis: allSchedulesDone,
         });
       }
     }
 
     if (todaysSchedules.length > 0) {
       const nextSchedule = todaysSchedules[0];
+      const isJadwalHabis =
+        allSchedulesDone ||
+        currentTime >=
+          new Date(`${currentDate}T${nextSchedule.jamJadwal.jam_selesai}`);
+      const isMulai =
+        !isJadwalHabis &&
+        currentTime >=
+          new Date(`${currentDate}T${nextSchedule.jamJadwal.jam_mulai}`);
 
       return this._success('Jam detail found successfully', {
-        nama_user: this.req.user.id,
+        nama_user: siswa.user.nama,
         jamDetailId: nextSchedule.jamDetail.id,
         jam_mulai: nextSchedule.jamJadwal.jam_mulai,
         jam_selesai: nextSchedule.jamJadwal.jam_selesai,
@@ -179,9 +292,8 @@ export class JadwalService extends BaseResponse {
         kelas: nextSchedule.jamDetail.kelas.nama_kelas,
         is_absen: false,
         is_masuk_kelas: false,
-        is_mulai:
-          currentTime >=
-          new Date(`${currentDate}T${nextSchedule.jamJadwal.jam_mulai}`), // Menghitung is_mulai
+        is_mulai: isMulai,
+        is_jadwal_habis: isJadwalHabis,
       });
     }
 
@@ -209,8 +321,6 @@ export class JadwalService extends BaseResponse {
       ],
     });
 
-    console.log('Jadwal List:', JSON.stringify(jadwalList, null, 2));
-
     const guru = await this.guruRepository.findOne({
       where: {
         id: this.req.user.id,
@@ -221,8 +331,6 @@ export class JadwalService extends BaseResponse {
     if (!guru) {
       throw new HttpException('Guru not found', HttpStatus.NOT_FOUND);
     }
-
-    console.log('Guru:', JSON.stringify(guru, null, 2));
 
     const currentTime = new Date();
     const currentDate = currentTime.toISOString().split('T')[0];
@@ -246,7 +354,20 @@ export class JadwalService extends BaseResponse {
       return jamMulaiA.getTime() - jamMulaiB.getTime();
     });
 
-    // Determine if there is an active schedule or the next one
+    // Check if all schedules are done
+    const lastSchedule = todaysSchedules[todaysSchedules.length - 1];
+    const lastJamSelesai = lastSchedule
+      ? new Date(`${currentDate}T${lastSchedule.jamJadwal.jam_selesai}`)
+      : null;
+
+    const allSchedulesDone =
+      lastSchedule?.jamJadwal.allSchedulesDone ||
+      (lastJamSelesai && currentTime > lastJamSelesai);
+
+    let isJadwalHabis = false;
+    let isMulai = false;
+    let isJadwalHabisHariIni = allSchedulesDone;
+
     for (const schedule of todaysSchedules) {
       const jamMulai = new Date(
         `${currentDate}T${schedule.jamJadwal.jam_mulai}`,
@@ -255,8 +376,10 @@ export class JadwalService extends BaseResponse {
         `${currentDate}T${schedule.jamJadwal.jam_selesai}`,
       );
 
-      const isMulai = currentTime >= jamMulai;
-      if (currentTime >= jamMulai && currentTime <= jamSelesai) {
+      isMulai = currentTime >= jamMulai && currentTime <= jamSelesai;
+      isJadwalHabis = currentTime >= jamSelesai;
+
+      if (isMulai) {
         const absenGuru = await this.absenGuruRepository.findOne({
           relations: ['jamDetailJadwal'],
           where: {
@@ -280,8 +403,9 @@ export class JadwalService extends BaseResponse {
         });
         const isAbsen = !!absenGuru;
         const isMasukKelas = !!absenKelas;
+
         return this._success('Jam detail found successfully', {
-          nama_user: this.req.user.id,
+          nama_user: guru.user.nama,
           jamDetailId: schedule.jamDetail.id,
           jam_mulai: schedule.jamJadwal.jam_mulai,
           jam_selesai: schedule.jamJadwal.jam_selesai,
@@ -289,28 +413,28 @@ export class JadwalService extends BaseResponse {
           kelas: schedule.jamDetail.kelas.nama_kelas,
           is_absen: isAbsen,
           is_masuk_kelas: isMasukKelas,
-          is_mulai: isMulai,
-        });
-      } else if (currentTime < jamMulai) {
-        return this._success('Jam detail found successfully', {
-          nama_user: this.req.user.id,
-          jamDetailId: schedule.jamDetail.id,
-          jam_mulai: schedule.jamJadwal.jam_mulai,
-          jam_selesai: schedule.jamJadwal.jam_selesai,
-          mapel: schedule.jamDetail.subject_code.mapel.nama_mapel,
-          kelas: schedule.jamDetail.kelas.nama_kelas,
-          is_absen: false,
-          is_masuk_kelas: false,
-          is_mulai: false, // Jadwal belum dimulai
+          is_mulai: true,
+          is_jadwal_habis: false,
+          is_jadwal_habis_hari_ini: isJadwalHabisHariIni, // Ditambahkan properti ini
         });
       }
     }
 
     if (todaysSchedules.length > 0) {
       const nextSchedule = todaysSchedules[0];
+      const nextJamMulai = new Date(
+        `${currentDate}T${nextSchedule.jamJadwal.jam_mulai}`,
+      );
+      const nextJamSelesai = new Date(
+        `${currentDate}T${nextSchedule.jamJadwal.jam_selesai}`,
+      );
+
+      isJadwalHabis = allSchedulesDone || currentTime >= nextJamSelesai;
+      isMulai = !isJadwalHabis && currentTime >= nextJamMulai;
 
       return this._success('Jam detail found successfully', {
-        nama_user: this.req.user.id,
+        id_user: guru.user.id,
+        nama_user: guru.user.nama,
         jamDetailId: nextSchedule.jamDetail.id,
         jam_mulai: nextSchedule.jamJadwal.jam_mulai,
         jam_selesai: nextSchedule.jamJadwal.jam_selesai,
@@ -318,9 +442,9 @@ export class JadwalService extends BaseResponse {
         kelas: nextSchedule.jamDetail.kelas.nama_kelas,
         is_absen: false,
         is_masuk_kelas: false,
-        is_mulai:
-          currentTime >=
-          new Date(`${currentDate}T${nextSchedule.jamJadwal.jam_mulai}`), // Menghitung is_mulai
+        is_mulai: isMulai,
+        is_jadwal_habis: isJadwalHabis,
+        is_jadwal_habis_hari_ini: isJadwalHabisHariIni, // Ditambahkan properti ini
       });
     }
 
@@ -379,9 +503,21 @@ export class JadwalService extends BaseResponse {
     return this._success('Jadwal fetched successfully', jadwalDto);
   }
 
-  // src/app/jadwal/jadwal.service.ts
   async create(createJadwalDto: CreateJadwalDto): Promise<ResponseSuccess> {
     const { hari_id, jam_jadwal } = createJadwalDto;
+
+    const existingJadwal = await this.jadwalRepository.findOne({
+      relations: ['hari'],
+      where: { hari: { id: createJadwalDto.hari_id } },
+    });
+
+    if (existingJadwal) {
+      throw new HttpException(
+        `Jadwal for ${existingJadwal.hari.nama_hari} already exists`,
+        HttpStatus.FOUND,
+      );
+      // return
+    }
 
     // Create the main Jadwal entity
     const jadwal = this.jadwalRepository.create({
@@ -393,6 +529,7 @@ export class JadwalService extends BaseResponse {
     const savedJadwal = await this.jadwalRepository.save(jadwal);
 
     // Loop through each JamJadwal DTO to create related entities
+    let lastSavedJamJadwal: JamJadwal;
     for (const jamJadwalDto of jam_jadwal) {
       // Create the JamJadwal entity
       const jamJadwal = this.jamJadwalRepository.create({
@@ -403,18 +540,17 @@ export class JadwalService extends BaseResponse {
       });
 
       // Save the JamJadwal entity
-      const savedJamJadwal = await this.jamJadwalRepository.save(jamJadwal);
+      lastSavedJamJadwal = await this.jamJadwalRepository.save(jamJadwal);
 
       // Loop through each JamDetailJadwal DTO to create related entities
       for (const jdDto of jamJadwalDto.jam_detail) {
         const jamDetailJadwal = new JamDetailJadwal();
-        jamDetailJadwal.jamJadwal = savedJamJadwal;
+        jamDetailJadwal.jamJadwal = lastSavedJamJadwal;
 
         // Find the related Kelas and SubjectCode entities
         const kelas = await this.kelasRepository.findOne({
           where: { id: jdDto.kelas },
         });
-        console.log(jdDto.kelas);
         const subject_code = await this.subjectCodeRepository.findOne({
           where: { id: jdDto.subject_code },
         });
@@ -434,6 +570,12 @@ export class JadwalService extends BaseResponse {
         // Save the JamDetailJadwal entity
         await this.jamDetailJadwalRepository.save(jamDetailJadwal);
       }
+    }
+
+    // Set the last JamJadwal's allSchedulesDone to true
+    if (lastSavedJamJadwal) {
+      lastSavedJamJadwal.allSchedulesDone = true;
+      await this.jamJadwalRepository.save(lastSavedJamJadwal);
     }
 
     return this._success('Jadwal created successfully', savedJadwal);
@@ -597,7 +739,7 @@ export class JadwalService extends BaseResponse {
         'jam_jadwal',
         'jam_jadwal.jam_detail',
         'jam_jadwal.jam_detail.kelas',
-        'jam_jadwal.jam_detail.subject_code.guru',
+        'jam_jadwal.jam_detail.subject_code.guru.user',
       ],
     });
 
@@ -637,14 +779,19 @@ export class JadwalService extends BaseResponse {
           jam_mulai: jamJadwal.jam_mulai,
           jam_selesai: jamJadwal.jam_selesai,
           is_rest: jamJadwal.is_rest,
+          allSchedulesDone: jamJadwal.allSchedulesDone,
           jam_detail: jamDetailList
             .filter((detail) => detail.jamJadwal.id === jamJadwal.id)
+            .sort((a, b) =>
+              a.kelas.nama_kelas.localeCompare(b.kelas.nama_kelas),
+            ) // Sort by nama_kelas
             .map((detail) => ({
               id: detail.id,
               id_subject_code: detail.subject_code?.id || null,
               nama_kelas: detail.kelas?.nama_kelas || null,
               subject_code: detail.subject_code?.code || null,
               nama_guru: detail.subject_code?.guru.user.nama || null,
+              id_guru: detail.subject_code.guru.id,
             })),
         })),
     }));
@@ -681,5 +828,93 @@ export class JadwalService extends BaseResponse {
 
     await this.jadwalRepository.remove(jadwals);
     return this._success('Jadwal deleted successfully', jadwals);
+  }
+
+  private async findUserByRole(userId: number): Promise<Murid | Guru> {
+    const siswa = await this.siswaRepository.findOne({
+      where: { id: userId },
+      relations: ['kelas', 'user'],
+    });
+
+    if (siswa) return siswa;
+
+    const guru = await this.guruRepository.findOne({
+      where: { id: userId },
+      relations: ['subject_code', 'user'],
+    });
+
+    return guru || null;
+  }
+
+  private findJamDetail(
+    jamDetailList: JamDetailJadwal[],
+    user: Murid | Guru,
+  ): JamDetailJadwal | null {
+    if ('kelas' in user) {
+      // Siswa
+      return jamDetailList.find((detail) => detail.kelas.id === user.kelas.id);
+    } else if ('subject_code' in user) {
+      // Guru
+      return jamDetailList.find(
+        (detail) => detail.subject_code.guru.id === user.id,
+      );
+    }
+    return null;
+  }
+
+  private checkIfAllSchedulesDone(
+    schedules: any[],
+    currentTime: Date,
+    currentDate: string,
+  ): boolean {
+    const lastSchedule = schedules[schedules.length - 1];
+    const lastJamSelesai = lastSchedule
+      ? new Date(`${currentDate}T${lastSchedule.jamJadwal.jam_selesai}`)
+      : null;
+
+    return (
+      lastSchedule?.jamJadwal.allSchedulesDone ||
+      (lastJamSelesai && currentTime > lastJamSelesai)
+    );
+  }
+
+  private async getAbsenStatus(
+    schedule: any,
+    user: Murid | Guru,
+  ): Promise<{ isAbsen: boolean; isMasukKelas: boolean }> {
+    if ('kelas' in user) {
+      // Siswa
+      const absenSiswa = await this.absenSiswaRepository.findOne({
+        relations: ['absenKelas'],
+        where: {
+          absenKelas: { id: schedule.jamDetail.id },
+          user: { id: user.id },
+        },
+      });
+      return {
+        isAbsen: !!absenSiswa,
+        isMasukKelas: !!absenSiswa,
+      };
+    } else if ('subject_code' in user) {
+      // Guru
+      const absenGuru = await this.absenGuruRepository.findOne({
+        relations: ['jamDetailJadwal'],
+        where: {
+          jamDetailJadwal: { id: schedule.jamDetail.id },
+          guru: { id: user.id },
+        },
+      });
+      const absenKelas = await this.absenKelasRepository.findOne({
+        where: {
+          jamDetailJadwal: { id: schedule.jamDetail.id },
+          guru: { id: user.id },
+        },
+      });
+      return {
+        isAbsen: !!absenGuru,
+        isMasukKelas: !!absenKelas,
+      };
+    }
+    return { isAbsen: false, isMasukKelas: false };
   }
 }

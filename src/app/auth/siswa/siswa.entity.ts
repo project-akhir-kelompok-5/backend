@@ -12,8 +12,7 @@ import {
 import { User } from '../auth.entity';
 import { Kelas } from 'src/app/kelas/kelas.entity';
 import { AbsenSiswa } from 'src/app/absen/absen-siswa/absen-siswa.entity';
-import { JamDetailJadwal } from 'src/app/jam-jadwal/jam-detail-jadwal.entity';
-
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
 @Entity()
 export class Murid {
   @PrimaryColumn()
@@ -44,4 +43,8 @@ export class Murid {
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   updated_at: Date;
+
+  
+  @Column({ type: 'boolean', default: false })
+  is_absen_today: boolean;
 }

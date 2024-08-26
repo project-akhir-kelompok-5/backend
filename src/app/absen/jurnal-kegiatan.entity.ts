@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
 import { AbsenGuru } from './absen-guru/absen-guru.entity';
 
 @Entity()

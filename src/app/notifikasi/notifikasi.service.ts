@@ -1,27 +1,39 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as webPush from 'web-push';
 
-// VAPID Keys from the previous step
-const VAPID_PUBLIC_KEY = 'BHgzOwxa7wYgHIGB6dg32aixEA6I4tJjvBnxJVJ3al1sXeK3aRl6ctz62URdwOAwiYLuUs2Ol_5MzjLDHBhcIfQ';
-const VAPID_PRIVATE_KEY = 'hsBt1f-hfFXcdDb9eVJnNCdZ8tIf17zno-ZgLc49NPQ';
+interface CustomPushSubscription {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
 
-webPush.setVapidDetails(
-  'mailto:nayhan@example.com', // Replace with your email address
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY,
-);
 
 @Injectable()
-export class NotifikasiService {
-  private readonly logger = new Logger(NotifikasiService.name);
+export class PushNotificationService {
+  async sendNotification(subscription: CustomPushSubscription, payload: { title: string; body: string }) {
+    const pushOptions = {
+      endpoint: subscription.endpoint,
+      keys: {
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+      },
+    };
 
-  async sendNotification(subscription: any, payload: any) {
+    // const webpush = require('web-push');
+    webPush.setVapidDetails(
+      'mailto:youremail@example.com',
+      'BEUDgYgPMim27rsp3fORWHlQEaJkkVJYYkg-ooj-8frnDfslIOdLmMBeKAsAEMum43RR053O7U3ic6Pa0vp1knY',
+      '3vSGvLPJZQGMz2a1ou5qPqbU4popwcwrX8tYFjGfelM',
+    );
+
     try {
-      await webPush.sendNotification(subscription, JSON.stringify(payload));
-      this.logger.log(`Notification sent`);
+      await webPush.sendNotification(pushOptions, JSON.stringify(payload));
+      console.log('Notification sent successfully');
     } catch (error) {
-      this.logger.error('Error sending notification', error.stack);
+      console.error('Error sending notification:', error);
     }
   }
-  
 }
+

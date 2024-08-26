@@ -5,8 +5,8 @@ import { AbsenService } from './absen.service';
 import { AbsenGuru } from './absen-guru/absen-guru.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
 import { User } from '../auth/auth.entity';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { AbsenKelas } from './absen-kelas/absen-kelas.entity';
 import { AbsenSiswa } from './absen-siswa/absen-siswa.entity';
@@ -18,14 +18,16 @@ import { AbsenGateway } from './absen.gateway';
 import { RekapAbsen } from '../rekap-absen/rekap-absen.entity';
 import { AbsenSiswaService } from './absen-siswa/absen-siswa.service';
 import { AbsenGuruService } from './absen-guru/absen-guru.service';
-import { AbsenSiswaController } from './absen-siswa/absen-siswa.controller';
 import { AbsenGuruController } from './absen-guru/absen-guru.controller';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AbsenSiswaController } from './absen-siswa/absen-siswa.controller';
+import { GeoLocation } from '../geo-location/geo-location.entity';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([
+      GeoLocation,
       AbsenGuru,
       AbsenKelas,
       SubjectCodeEntity,

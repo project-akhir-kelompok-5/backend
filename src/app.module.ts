@@ -28,7 +28,19 @@ import { RekapAbsenModule } from './app/rekap-absen/rekap-absen.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AbsenService } from './app/absen/absen.service';
 import { AbsenGuru } from './app/absen/absen-guru/absen-guru.entity';
-import { JamDetailJadwal } from './app/jam-jadwal/jam-detail-jadwal.entity';
+import { JamDetailJadwal } from './app/jadwal/jam-detail-jadwal.entity';
+import { Guru } from './app/auth/guru/guru.entity';
+import { Jadwal } from './app/jadwal/jadwal.entity';
+import { Murid } from './app/auth/siswa/siswa.entity';
+import { AbsenSiswa } from './app/absen/absen-siswa/absen-siswa.entity';
+import { GeoLocationModule } from './app/geo-location/geo-location.module';
+import { AbsenGateway } from './app/absen/absen.gateway';
+import { AuthService } from './app/auth/auth.service';
+import { User } from './app/auth/auth.entity';
+import { Mapel } from './app/mapel/mapel.entity';
+import { Kelas } from './app/kelas/kelas.entity';
+import { ResetPassword } from './app/auth/reset_password.entity';
+import { Notifikasi } from './app/notifikasi/notifikasi.entity';
 
 @Module({
   imports: [
@@ -41,9 +53,16 @@ import { JamDetailJadwal } from './app/jam-jadwal/jam-detail-jadwal.entity';
     TypeOrmModule.forRoot(typeOrmConfig),
     TypeOrmModule.forFeature([
       AbsenGuru,
+      Guru,
+      Jadwal,
+      Murid,
+      AbsenSiswa,
       JamDetailJadwal,
+      User,
+      ResetPassword,
+      Notifikasi
     ]),
-    ScheduleModule.forRoot(), 
+    ScheduleModule.forRoot(),
     AuthModule,
     MailModule,
     QueryBuilderModule,
@@ -58,8 +77,9 @@ import { JamDetailJadwal } from './app/jam-jadwal/jam-detail-jadwal.entity';
     TestSocketModule,
     NotifikasiModule,
     RekapAbsenModule,
+    GeoLocationModule,
   ],
   controllers: [AppController, UploadController],
-  providers: [AppService, UniqueValidator],
+  providers: [AppService, AuthService, UniqueValidator, AbsenGateway],
 })
 export class AppModule {}

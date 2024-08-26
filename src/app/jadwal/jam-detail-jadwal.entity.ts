@@ -1,6 +1,6 @@
 // src/app/jam-jadwal-detail/jam-detail-jadwal.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
+import { JamJadwal } from './jam-jadwal.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { AbsenGuru } from '../absen/absen-guru/absen-guru.entity';
@@ -25,8 +25,4 @@ export class JamDetailJadwal {
   @ManyToOne(() => Kelas, (kelas) => kelas.jamDetail, {onDelete: 'CASCADE'})
   @JoinColumn()
   kelas: Kelas;
-
-  @ManyToOne(() => Mapel, (mapel) => mapel.jamDetail)
-  @JoinColumn()
-  mapel: Mapel;
 }

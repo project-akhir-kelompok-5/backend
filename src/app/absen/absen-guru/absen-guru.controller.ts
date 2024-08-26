@@ -8,12 +8,12 @@ import { AbsenGuruService } from './absen-guru.service';
 export class AbsenGuruController {
   constructor(private readonly absenGuruService: AbsenGuruService) {}
 
-  @Get('mingguan')
+  @Get('/')
   async getWeeklySummary(
-    @Query('month') month: string,
-    @Query('week') week: number,
+    @Query('bulan') month: string,
+    @Query('minggu') minggu: number,
     @Query('mapel') mapel: string,
   ): Promise<ResponseSuccess> {
-    return this.absenGuruService.getWeeklySummary(month, week, mapel);
+    return this.absenGuruService.getRekapGuru(month, minggu, mapel);
   }
 }

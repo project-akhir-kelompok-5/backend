@@ -6,18 +6,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { AbsenService } from './absen.service';
-import { CreateAbsenSiswaDto } from './absen.dto';
-import { HttpException, HttpStatus, Inject } from '@nestjs/common';
 import BaseResponse from 'src/utils/response/base.response';
-import { InjectRepository } from '@nestjs/typeorm';
-import { AbsenSiswa } from './absen-siswa/absen-siswa.entity';
-import { Repository } from 'typeorm';
-import { AbsenGuru } from './absen-guru/absen-guru.entity';
-import { AbsenKelas } from './absen-kelas/absen-kelas.entity';
-import { User } from '../auth/auth.entity';
-import { REQUEST } from '@nestjs/core';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
 
 @WebSocketGateway({
   cors: {
@@ -43,26 +32,93 @@ export class AbsenGateway extends BaseResponse {
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
   }
-  
+
   @SubscribeMessage('createAbsenSiswa')
   async handleCreateAbsenSiswa(
-    @ConnectedSocket() client: any,
+    @ConnectedSocket() client: Socket,
     @MessageBody() payload: any,
   ) {
-    this.server.emit('absenSiswaUpdated', payload);
+    client.to(payload.jamDetailId).emit('absenSiswaUpdated', payload);
     console.log('data pay', payload);
+    console.log('data room', payload.jamDetailId);
 
     return this._success('Siswa absen successfully', payload);
   }
 
   @SubscribeMessage('closeAbsen')
   async handleCloseAbsen(
-    @ConnectedSocket() client: any,
+    @ConnectedSocket() client: Socket,
     @MessageBody() payload: any,
   ) {
-    this.server.emit('absenCloseUpdated', payload);
+    console.log(payload);
+    client.to(payload.jamDetailId).emit('absenCloseUpdated', payload);
     console.log('data pay', payload);
 
     return this._success('Siswa absen successfully', payload);
+  }
+
+  @SubscribeMessage('joinRoom')
+  handleJoinRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: { roomId: string },
+  ) {
+    const { roomId } = payload;
+    client.join(roomId);
+    console.log(`Client ${client.id} joined room: ${roomId}`);
+  }
+
+  @SubscribeMessage('joinSiswa')
+  handlejOinSiswa(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload
+  ) {
+    client.join(payload)
+  }
+
+  @SubscribeMessage('joinGuru')
+  handlejOinGuru(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload
+  ) {
+    client.join(payload)
+  }
+
+  @SubscribeMessage('notifGuru')
+  async handlePushNotifGuru(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: any,
+  ) {
+    const roomId = payload.guruId; // Ensure `guruId` is sent with the payload
+
+    // Log when this method is triggered
+    console.log('Received notifGuru message:', payload);
+
+    let suc = client.to(roomId).emit('notifGuruUpdated', payload);
+
+    // Log to check if the emit was successful
+    console.log('Emit success:', suc);
+    console.log('Payload data:', payload);
+
+    return this._success('Notification sent successfully', payload);
+  }
+
+  @SubscribeMessage('notifSiswa')
+  async handlePushNotifSiswa(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() payload: any,
+  ) {
+    const roomId = payload.studentId; // Ensure `guruId` is sent with the payload
+
+    // Log when this method is triggered
+    console.log('Received notifGuru message:', payload);
+    console.log('Room Id:', payload.studentId);
+
+    let suc = client.to(roomId).emit('notifSiswaUpdated', payload);
+
+    // Log to check if the emit was successful
+    console.log('Emit success:', suc);
+    console.log('Payload data:', payload);
+
+    return this._success('Notification sent successfully', payload);
   }
 }

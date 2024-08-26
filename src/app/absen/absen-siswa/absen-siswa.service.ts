@@ -1,8 +1,9 @@
 import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { JamDetailJadwal } from 'src/app/jam-jadwal/jam-detail-jadwal.entity';
-import { JamJadwal } from 'src/app/jam-jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
+
+import { JamJadwal } from 'src/app/jadwal/jam-jadwal.entity';
 import { Between, Repository } from 'typeorm';
 import { AbsenKelas } from '../absen-kelas/absen-kelas.entity';
 import { User } from 'src/app/auth/auth.entity';
@@ -11,7 +12,13 @@ import { CreateAbsenSiswaDto } from '../absen.dto';
 import BaseResponse from 'src/utils/response/base.response';
 import { ResponseSuccess } from 'src/interface/respone';
 import { map } from 'rxjs';
-import { getMaxWeeksInMonth, getWeekRange } from 'src/utils/helper function/getWeek';
+import {
+  getMaxWeeksInMonth,
+  getMonthRange,
+  getWeekRange,
+} from 'src/utils/helper function/getWeek';
+import { GeoLocation } from 'src/app/geo-location/geo-location.entity';
+import { calculateDistance } from 'src/utils/validator/location.validator';
 
 @Injectable()
 export class AbsenSiswaService extends BaseResponse {
@@ -26,6 +33,8 @@ export class AbsenSiswaService extends BaseResponse {
     private readonly jamDetailJadwalRepository: Repository<JamDetailJadwal>,
     @InjectRepository(JamJadwal)
     private readonly jamJadwalRepository: Repository<JamJadwal>,
+    @InjectRepository(GeoLocation)
+    private readonly geoRepository: Repository<GeoLocation>,
     @Inject(REQUEST) private req: any,
   ) {
     super();
@@ -34,7 +43,35 @@ export class AbsenSiswaService extends BaseResponse {
   async AbsenSiswa(
     createAbsenSiswaDto: CreateAbsenSiswaDto,
   ): Promise<ResponseSuccess> {
-    const { kode_class } = createAbsenSiswaDto;
+    const {
+      kode_class,
+      latitude: currentLatitude,
+      longitude: currentLongitude,
+    } = createAbsenSiswaDto;
+
+    const defaultLokasi = await this.geoRepository.findOne({
+      where: {
+        id: 0,
+      },
+    });
+
+    const defaultLatitude = defaultLokasi.latitude;
+    const defaultLongitude = defaultLokasi.longitude;
+
+    const distance = calculateDistance(
+      currentLatitude,
+      currentLongitude,
+      defaultLatitude,
+      defaultLongitude,
+    );
+
+    if (distance > 50) {
+      // Misalkan 50 meter adalah batas jarak yang valid
+      throw new HttpException(
+        'Anda tidak berada di lokasi yang tepat',
+        HttpStatus.FORBIDDEN,
+      );
+    }
     const absenKelas = await this.absenKelasRepository.findOne({
       where: { kode_kelas: kode_class },
       relations: [
@@ -118,9 +155,10 @@ export class AbsenSiswaService extends BaseResponse {
 
     return this._success('Siswa absen successfully', absenSiswa);
   }
+  
 
-  async getWeeklySummary(
-    month: string,
+  async getRekapSiswa(
+    bulan: string,
     week: number,
     mapel: string,
   ): Promise<ResponseSuccess> {
@@ -133,9 +171,7 @@ export class AbsenSiswaService extends BaseResponse {
     }
 
     // Validate the week number
-    const [startOfWeek, endOfWeek] = getWeekRange(month, week);
-    const maxWeeks = getMaxWeeksInMonth(month);
-
+    const maxWeeks = getMaxWeeksInMonth(bulan);
     if (week > maxWeeks) {
       throw new HttpException(
         'Week number exceeds the maximum number of weeks in the month',
@@ -143,20 +179,32 @@ export class AbsenSiswaService extends BaseResponse {
       );
     }
 
+    const [startOfMonth, endOfMonth] = getMonthRange(bulan);
+
+    const startOfWeek = week ? getWeekRange(bulan, week)[0] : startOfMonth;
+    const endOfWeek = week ? getWeekRange(bulan, week)[1] : endOfMonth;
+
     console.log('Date Range:', startOfWeek, endOfWeek);
 
-    const absensi = await this.absenSiswaRepository.find({
-      where: {
-        user: { id: user.id },
-        waktu_absen: Between(startOfWeek, endOfWeek),
-        jamDetailJadwal: {
-          subject_code: {
-            mapel: {
-              nama_mapel: mapel,
-            },
+    // Build query conditions
+    const whereConditions: any = {
+      user: { id: user.id },
+      waktu_absen: Between(startOfWeek, endOfWeek),
+    };
+
+    if (mapel) {
+      whereConditions.jamDetailJadwal = {
+        subject_code: {
+          mapel: {
+            nama_mapel: mapel,
           },
         },
-      },
+      };
+    }
+
+    const absensi = await this.absenSiswaRepository.find({
+      where: whereConditions,
+      relations: ['jamDetailJadwal', 'jamDetailJadwal.subject_code'], // Ensure necessary relations are included
     });
 
     console.log('Attendance Records:', absensi);
@@ -172,13 +220,11 @@ export class AbsenSiswaService extends BaseResponse {
     const result = {
       id: user.id,
       nama: user.nama,
-      month,
+      bulan,
       week,
       data: counts,
     };
 
     return this._success('Weekly summary fetched successfully', result);
   }
-
-  
 }

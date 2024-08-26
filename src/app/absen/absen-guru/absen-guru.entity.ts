@@ -7,8 +7,8 @@ import {
 } from 'typeorm';
 import { Jadwal } from '../../jadwal/jadwal.entity';
 import { User } from '../../auth/auth.entity';
-import { JamJadwal } from '../../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../../jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
 import { Guru } from '../../auth/guru/guru.entity';
 import { AbsenKelas } from '../absen-kelas/absen-kelas.entity';
 
@@ -22,7 +22,7 @@ export class AbsenGuru {
   @ManyToOne(() => JamDetailJadwal, { nullable: false })
   jamDetailJadwal: JamDetailJadwal;
 
-  @ManyToOne(() => JamJadwal, { nullable: false , onDelete: 'CASCADE'})
+  @ManyToOne(() => JamJadwal, { nullable: true , onDelete: 'CASCADE'})
   jamJadwal: JamJadwal;
 
   @ManyToOne(() => Jadwal, { nullable: true })

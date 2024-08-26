@@ -13,8 +13,8 @@ import { Jadwal } from '../jadwal/jadwal.entity';
 import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from '../auth/auth.guard';
 import { User } from '../auth/auth.entity';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from '../jadwal/jam-detail-jadwal.entity';
 import { KelasEnum } from '../auth/roles.enum';
 import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
 
@@ -27,9 +27,6 @@ export class Kelas {
   @Column()
   nama_kelas: string;
 
-  @Column()
-  kode: string;
-
   @OneToMany(() => JamDetailJadwal, (jamJadwal) => jamJadwal.kelas, {
     onDelete: 'CASCADE',
   })
@@ -38,8 +35,6 @@ export class Kelas {
   @OneToMany(() => Murid, (siswa) => siswa.kelas)
   siswa: Murid[];
 
-  @OneToMany(() => Jadwal, (jadwal) => jadwal.kelas)
-  jadwal: Jadwal[];
 
   @OneToMany(() => User, (user) => user.kelas)
   user: User[];

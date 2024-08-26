@@ -11,8 +11,8 @@ import { Mapel } from '../mapel/mapel.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { User } from '../auth/auth.entity';
 import { AbsenGuru } from '../absen/absen-guru/absen-guru.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from './jam-detail-jadwal.entity';
+import { JamJadwal } from './jam-jadwal.entity';
 import { SubjectCodeEntity } from '../subject_code/subject_code.entity';
 import { Hari } from '../hari/hari.entity';
 import { AbsenSiswa } from '../absen/absen-siswa/absen-siswa.entity';
@@ -34,19 +34,11 @@ export class Jadwal {
   @OneToMany(() => AbsenGuru, (absen) => absen.jadwal)
   absen_guru: AbsenGuru
 
-  
-
   @OneToMany(() => AbsenKelas, (absen) => absen.jadwal)
   absen_kelas: AbsenKelas
 
-  @ManyToOne(() => Kelas, (kelas) => kelas.jadwal)
-  kelas: Kelas;
-
   @ManyToOne(() => Hari, (Hari) => Hari.jadwals)
   hari: Hari;
-
-  @ManyToOne(() => SubjectCodeEntity, (SubjectCode) => SubjectCode.jadwal)
-  subject_code: SubjectCodeEntity;
 
   @OneToMany(() => JamJadwal, (jamJadwal) => jamJadwal.jadwal, {
     onDelete: 'CASCADE',

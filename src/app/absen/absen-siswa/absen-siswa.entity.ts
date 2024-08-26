@@ -4,8 +4,8 @@ import { AbsenKelas } from '../absen-kelas/absen-kelas.entity';
 import { User } from '../../auth/auth.entity';
 import { Kelas } from '../../kelas/kelas.entity';
 import { Jadwal } from '../../jadwal/jadwal.entity';
-import { JamJadwal } from '../../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../../jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
 
 @Entity()
 export class AbsenSiswa {
@@ -15,7 +15,7 @@ export class AbsenSiswa {
   @ManyToOne(() => User)
   user: User;
 
-  @ManyToOne(() => JamDetailJadwal, {onDelete: 'CASCADE'})
+  @ManyToOne(() => JamDetailJadwal, { onDelete: 'CASCADE' })
   jamDetailJadwal: JamDetailJadwal;
 
   @Column({
@@ -24,9 +24,9 @@ export class AbsenSiswa {
   status: string;
 
   @ManyToOne(() => AbsenKelas, (absenKelas) => absenKelas.absenSiswa, {
-    onDelete: 'CASCADE',
+    nullable: true,
   })
-  absenKelas: AbsenKelas;
+  absenKelas: AbsenKelas | null;
 
   @Column()
   waktu_absen: Date;

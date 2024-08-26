@@ -9,8 +9,8 @@ import {
 import { Kelas } from '../../kelas/kelas.entity';
 import { Guru } from '../../auth/guru/guru.entity';
 import { AbsenSiswa } from '../absen-siswa/absen-siswa.entity';
-import { JamDetailJadwal } from '../../jam-jadwal/jam-detail-jadwal.entity';
-import { JamJadwal } from '../../jam-jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from 'src/app/jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../../jadwal/jam-jadwal.entity';
 import { Jadwal } from '../../jadwal/jadwal.entity';
 import { User } from '../../auth/auth.entity';
 

@@ -1,6 +1,7 @@
 import {
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -30,6 +31,7 @@ import { Kelas } from '../kelas/kelas.entity';
 import { RegisterSiswaDto } from './siswa/siswa.dto';
 import { Murid } from './siswa/siswa.entity';
 import { Role } from './roles.enum';
+import { REQUEST } from '@nestjs/core';
 
 @Injectable()
 export class AuthService extends BaseResponse {
@@ -37,16 +39,18 @@ export class AuthService extends BaseResponse {
     @InjectRepository(User) private readonly authRepository: Repository<User>,
     @InjectRepository(Guru) private readonly guruRepository: Repository<Guru>,
     @InjectRepository(Murid) private readonly siswaRepository: Repository<Murid>,
-    @InjectRepository(Mapel)
-    private readonly mapelRepository: Repository<Mapel>,
-    @InjectRepository(Kelas)
-    private readonly kelasRepository: Repository<Kelas>,
     @InjectRepository(ResetPassword)
     private readonly resetPasswordRepository: Repository<ResetPassword>,
     private jwtService: JwtService,
     private mailService: MailService,
+    @Inject(REQUEST) private req: any
   ) {
     super();
+  }
+
+  async getUserId() {
+    const userId = this.req.user.id
+    return userId
   }
 
   async resetPassword(

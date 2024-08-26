@@ -9,7 +9,7 @@ import {
 import { Guru } from '../auth/guru/guru.entity';
 import { Mapel } from '../mapel/mapel.entity';
 import { Jadwal } from '../jadwal/jadwal.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamDetailJadwal } from '../jadwal/jam-detail-jadwal.entity';
 import { Kelas } from '../kelas/kelas.entity';
 
 @Entity()
@@ -29,10 +29,6 @@ export class SubjectCodeEntity {
   @ManyToOne(() => Mapel, (mapel) => mapel.subject_code, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'mapel_id' })
   mapel: Mapel;
-
-
-  @OneToMany(() => Jadwal, (jadwal) => jadwal.subject_code)
-  jadwal: Jadwal[];
 
   @OneToMany(() => JamDetailJadwal, (jadwal) => jadwal.subject_code)
   jamDetail: JamDetailJadwal[];

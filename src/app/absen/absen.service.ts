@@ -21,8 +21,8 @@ import { ResponseSuccess } from 'src/interface/respone';
 import { REQUEST } from '@nestjs/core';
 import { User } from '../auth/auth.entity';
 import { Role } from '../auth/roles.enum';
-import { JamJadwal } from '../jam-jadwal/jam-jadwal.entity';
-import { JamDetailJadwal } from '../jam-jadwal/jam-detail-jadwal.entity';
+import { JamJadwal } from '../jadwal/jam-jadwal.entity';
+import { JamDetailJadwal } from '../jadwal/jam-detail-jadwal.entity';
 import { Kelas } from '../kelas/kelas.entity';
 import { AbsenSiswa } from './absen-siswa/absen-siswa.entity';
 import { AbsenKelas } from './absen-kelas/absen-kelas.entity';
@@ -68,37 +68,6 @@ export class AbsenService extends BaseResponse {
   ) {
     super();
   }
-  // @Cron(CronExpression.EVERY_SECOND)
-  // async handleAutoAbsenGuru() {
-  //   const currentTime = new Date();
-  //   const currentDate = currentTime.toISOString().split('T')[0];
-
-  //   const jamDetailJadwals = await this.jamDetailJadwalRepository.find({
-  //     relations: ['jamJadwal'],
-  //   });
-
-  //   for (const jamDetailJadwal of jamDetailJadwals) {
-  //     const jamJadwal = jamDetailJadwal.jamJadwal;
-  //     const jamSelesai = new Date(`${currentDate}T${jamJadwal.jam_selesai}`);
-
-  //     if (currentTime > jamSelesai) {
-  //       // Check for all teachers who have not marked attendance
-  //       const absentTeachers = await this.absenGuruRepository.find({
-  //         where: {
-  //           guru: this.req.user.id,
-  //           jamDetailJadwal: { id: jamDetailJadwal.id },
-  //           waktu_absen: null,
-  //         },
-  //       });
-
-  //       for (const absentTeacher of absentTeachers) {
-  //         absentTeacher.status = 'Alpha';
-  //         absentTeacher.waktu_absen = jamSelesai;
-  //         await this.absenGuruRepository.save(absentTeacher);
-  //       }
-  //     }
-  //   }
-  // }
 
   async enterClassGuru(
     createEnterClassGuruDto: CreateEnterClassGuruDto,
@@ -157,7 +126,7 @@ export class AbsenService extends BaseResponse {
 
     const jamDetailJadwal = await this.jamDetailJadwalRepository.findOne({
       where: { id: jam_detail_id },
-      relations: ['jamJadwal', 'subject_code.mapel', 'mapel', 'kelas'],
+      relations: ['jamJadwal', 'subject_code.mapel', 'kelas'],
     });
 
     if (!user || !jamDetailJadwal) {
