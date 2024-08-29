@@ -3,16 +3,18 @@ import { MailService } from './mail.service';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { join } from 'path';
-
+import * as dotenv from 'dotenv';
+  dotenv.config();
+  
 @Module({
   imports: [
     MailerModule.forRoot({
       transport: {
-        host: 'sandbox.smtp.mailtrap.io', //sesuaikan konfigurasi
-        port: 2525,
+        host: process.env.MAIL_HOST, //sesuaikan konfigurasi
+        port: Number(process.env.MAIL_PORT),
         auth: {
-          user: '783886a23f42f0', //sesuaikan user
-          pass: '52b614fdbe29c2', //sesuaikan password
+          user: process.env.MAIL_USER, //sesuaikan user
+          pass: process.env.MAIL_PASS, //sesuaikan password
         },
       },
       defaults: {
