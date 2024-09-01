@@ -41,6 +41,7 @@ import { Mapel } from './app/mapel/mapel.entity';
 import { Kelas } from './app/kelas/kelas.entity';
 import { ResetPassword } from './app/auth/reset_password.entity';
 import { Notifikasi } from './app/notifikasi/notifikasi.entity';
+import { DownloadService } from './app/download/download.service';
 
 @Module({
   imports: [
@@ -80,6 +81,6 @@ import { Notifikasi } from './app/notifikasi/notifikasi.entity';
     GeoLocationModule,
   ],
   controllers: [AppController, UploadController],
-  providers: [AppService, AuthService, UniqueValidator, AbsenGateway],
+  providers: [AppService, AuthService, UniqueValidator, AbsenGateway, DownloadService],
 })
 export class AppModule {}

@@ -18,13 +18,18 @@ export const indexToMonthName: { [key: number]: string } = Object.keys(
   acc[monthNameToIndex[key]] = key;
   return acc;
 }, {} as { [key: number]: string });
-export function getWeekNumberInMonth(date: Date): number {
-  const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-  const startDay = startOfMonth.getDay(); // Get the day of the week for the 1st of the month
-  const offsetDate = date.getDate() + startDay - 1; // Adjust for days before the first full week
 
-  return Math.ceil(offsetDate / 7); // Use ceil to ensure proper week calculation
+export function getWeekNumberInMonth(): number {
+  const date = new Date();
+  const dayOfMonth = date.getDate();
+  
+  if (dayOfMonth <= 7) return 1;
+  if (dayOfMonth <= 14) return 2;
+  if (dayOfMonth <= 21) return 3;
+  if (dayOfMonth <= 28) return 4;
+  return 5;
 }
+
 
 export function getMonthRange(month: string): [Date, Date] {
   const year = new Date().getFullYear();
@@ -34,27 +39,46 @@ export function getMonthRange(month: string): [Date, Date] {
   return [startOfMonth, endOfMonth];
 }
 
-export function getWeekRange(month: string, week: number): [Date, Date] {
+export function getWeekRange(month: string): [Date, Date] {
   const year = new Date().getFullYear();
-  const monthIndex = parseInt(month, 10) - 1; // Convert 'MM' to month index
-  const startOfMonth = new Date(year, monthIndex, 1);
+  const monthIndex = parseInt(month, 10) - 1; // Convert month to zero-based index
+  let startOfWeek: Date;
+  let endOfWeek: Date;  
 
-  // Calculate the start of the week
-  const startOfWeek = new Date(startOfMonth);
-  startOfWeek.setDate((week - 1) * 7 + 1);
+  const week = getWeekNumberInMonth();
+  console.log('week', week);
 
-  // Calculate the end of the week
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-  // Adjust endOfWeek if it goes beyond the last day of the month
-  const lastDayOfMonth = new Date(year, monthIndex + 1, 0).getDate();
-  if (endOfWeek.getDate() > lastDayOfMonth) {
-    endOfWeek.setDate(lastDayOfMonth);
+  switch (week) {
+    case 1:
+      startOfWeek = new Date(year, monthIndex, 1);
+      endOfWeek = new Date(year, monthIndex, 7);
+      break;
+    case 2:
+      startOfWeek = new Date(year, monthIndex, 8);
+      endOfWeek = new Date(year, monthIndex, 14);
+      break;
+    case 3:
+      startOfWeek = new Date(year, monthIndex, 15);
+      endOfWeek = new Date(year, monthIndex, 21);
+      break;
+    case 4:
+      startOfWeek = new Date(year, monthIndex, 22);
+      endOfWeek = new Date(year, monthIndex, 28);
+      break;
+    case 5:
+      startOfWeek = new Date(year, monthIndex, 29);
+      endOfWeek = new Date(year, monthIndex + 1, 0); // 0th day of next month gives last day of current month
+      break;
+    default:
+      throw new Error('Invalid week number');
   }
+
+  console.log(JSON.stringify({ startOfWeek, endOfWeek }));
 
   return [startOfWeek, endOfWeek];
 }
+
+
 
 export function getMaxWeeksInMonth(month: string): number {
   const year = new Date().getFullYear();

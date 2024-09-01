@@ -170,6 +170,8 @@ export class AbsenSiswaService extends BaseResponse {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
+    const currentDate = new Date()
+
     // Validate the week number
     const maxWeeks = getMaxWeeksInMonth(bulan);
     if (week > maxWeeks) {
@@ -181,8 +183,8 @@ export class AbsenSiswaService extends BaseResponse {
 
     const [startOfMonth, endOfMonth] = getMonthRange(bulan);
 
-    const startOfWeek = week ? getWeekRange(bulan, week)[0] : startOfMonth;
-    const endOfWeek = week ? getWeekRange(bulan, week)[1] : endOfMonth;
+    const startOfWeek = week ? getWeekRange(bulan)[0] : startOfMonth;
+    const endOfWeek = week ? getWeekRange(bulan)[1] : endOfMonth;
 
     console.log('Date Range:', startOfWeek, endOfWeek);
 

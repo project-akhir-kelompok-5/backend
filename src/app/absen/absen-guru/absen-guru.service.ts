@@ -201,21 +201,24 @@ export class AbsenGuruService extends BaseResponse {
 
     // If week is not provided, calculate the current week of the month
     if (!week) {
-      week = getWeekNumberInMonth(currentDate);
+      week = getWeekNumberInMonth();
     }
 
     const [startOfMonth, endOfMonth] = getMonthRange(month);
-    const maxWeeks = getMaxWeeksInMonth(month);
+    // const maxWeeks = getMaxWeeksInMonth(month);
+    // if (week > maxWeeks) {
+    //   week = maxWeeks; // Adjust week to the last valid week
+    // }
 
-    if (week > maxWeeks) {
-      throw new HttpException(
-        'Week number exceeds the maximum number of weeks in the month',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (week > maxWeeks) {
+    //   throw new HttpException(
+    //     'Week number exceeds the maximum number of weeks in the month',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    const startOfWeek = week ? getWeekRange(month, week)[0] : startOfMonth;
-    const endOfWeek = week ? getWeekRange(month, week)[1] : endOfMonth;
+    const startOfWeek = week ? getWeekRange(month)[0] : startOfMonth;
+    const endOfWeek = week ? getWeekRange(month)[1] : endOfMonth;
 
     console.log('Parameters:', { month, week });
     console.log('Date Range:', { startOfWeek, endOfWeek });
